@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 
 export const milestoneCategories = pgEnum("milestone_categories", [
@@ -36,5 +36,13 @@ export const milestoneCategories = pgEnum("milestone_categories", [
   }, (table) => [
     primaryKey({ columns: [table.milestoneId, table.month] }),
   ]);
+
+  export const milestoneVideos = pgTable("milestone_videos", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    milestoneId: integer("milestone_id").notNull().references(() => milestones.id),
+    achievedMilestone: text("achieved_milestone").notNull(),
+    storagePath: text("storage_path").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  });
   
   

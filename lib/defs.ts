@@ -1,4 +1,4 @@
-import { milestoneAchievementRates, milestoneCategories, validators } from "@/db/schema";
+import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos } from "@/db/schema";
 
 export type Milestone = {
     id: number;
@@ -12,3 +12,5 @@ export type MilestoneCategory = (typeof milestoneCategories.enumValues)[number];
 export type MilestoneAchievementRate = (typeof milestoneAchievementRates.enumValues)[number];
 
 export type Validator = typeof validators.$inferSelect;
+
+export type MilestoneVideo = typeof milestoneVideos.$inferSelect;
