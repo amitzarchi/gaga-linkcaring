@@ -41,7 +41,8 @@ export const milestoneCategories = pgEnum("milestone_categories", [
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     milestoneId: integer("milestone_id").notNull().references(() => milestones.id),
     achievedMilestone: text("achieved_milestone").notNull(),
-    storagePath: text("storage_path").notNull(),
+    videoPath: text("video_path").notNull(),
+    thumbnailPath: text("thumbnail_path").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   });
   

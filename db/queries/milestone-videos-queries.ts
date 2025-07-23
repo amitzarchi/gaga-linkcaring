@@ -20,7 +20,8 @@ export async function getMilestoneVideos() {
 export async function createMilestoneVideo(data: {
   milestoneId: number;
   achievedMilestone: string;
-  storagePath: string;
+  videoPath: string;
+  thumbnailPath: string;
 }) {
   const session = await auth.api.getSession({
     headers: await headers()
@@ -36,7 +37,8 @@ export async function updateMilestoneVideo(
   id: number,
   data: Partial<{
     achievedMilestone: string;
-    storagePath: string;
+    videoPath: string;
+    thumbnailPath: string;
   }>
 ) {
   const session = await auth.api.getSession({
