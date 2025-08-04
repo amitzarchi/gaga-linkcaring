@@ -4,7 +4,14 @@ import {
   timestamp,
   boolean,
   integer,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+export const accessRequestStatusEnum = pgEnum("access_request_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED"
+]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -66,4 +73,20 @@ export const verification = pgTable("verification", {
   ),
 });
 
-export default { user, session, account, verification };
+export const accessRequest = pgTable("access_requests", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  reason: text("reason"),
+  status: accessRequestStatusEnum("status")
+    .default("PENDING")
+    .notNull(),
+  requestedAt: timestamp("requested_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: text("reviewed_by"),
+  notes: text("notes"),
+});
+
+export default { user, session, account, verification, accessRequest };

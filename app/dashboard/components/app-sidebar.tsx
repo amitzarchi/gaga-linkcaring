@@ -31,6 +31,7 @@ import {
   Settings,
   User
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const menuItems = [
   {
@@ -57,10 +58,16 @@ const menuItems = [
 
 export function AppSidebar() {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const handleSignOut = async () => {
-    await signOut()
-  }
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/");
+        },
+      },
+    });  }
 
   return (
     <Sidebar collapsible="icon">
