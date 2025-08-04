@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, Suspense } from "react";
 import { Loader2, CheckCircle } from "lucide-react";
+import Link from "next/link";
 import { useAccessRequests } from "@/app/context/access-requests-context";
 import { AccessRequestsProvider } from "@/app/context/access-requests-context";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -202,12 +203,12 @@ function RequestAccessForm() {
           <div className="mt-6 pt-4 border-t text-center">
             <p className="text-xs text-muted-foreground">
               Already have access?{" "}
-              <a 
+              <Link
                 href="/" 
                 className="text-primary hover:underline font-medium"
               >
                 Sign in here
-              </a>
+              </Link>
             </p>
           </div>
         </CardContent>

@@ -32,6 +32,7 @@ import {
   User
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 const menuItems = [
   {
@@ -84,10 +85,10 @@ export function AppSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
