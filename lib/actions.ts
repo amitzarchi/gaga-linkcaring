@@ -1,6 +1,4 @@
 "use server";
-
-import ffmpeg from "fluent-ffmpeg";
 import {
   S3Client,
   PutObjectCommand,
@@ -168,7 +166,10 @@ export async function compressVideo(
     const compressionSettings = getCompressionSettings(options);
 
     // Compress video using ffmpeg
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>(async (resolve, reject) => {
+      // Dynamic import to avoid webpack warnings
+      const ffmpeg = (await import("fluent-ffmpeg")).default;
+      
       let command = ffmpeg(tempInputPath);
 
       // Video codec and quality settings
@@ -180,7 +181,7 @@ export async function compressVideo(
 
       command
         .output(tempOutputPath)
-        .on("error", (err) => {
+        .on("error", (err: any) => {
           console.error("Video compression error:", err);
           reject(new Error(`Failed to compress video: ${err.message}`));
         })
@@ -188,12 +189,12 @@ export async function compressVideo(
           console.log("Video compression completed successfully");
           resolve();
         })
-        .on("progress", (progress) => {
+        .on("progress", (progress: any) => {
           console.log(
             `Compression progress: ${Math.round(progress.percent || 0)}%`
           );
         })
-        .on("start", (commandLine) => {
+        .on("start", (commandLine: string) => {
           console.log("FFmpeg compression command:", commandLine);
         });
 
@@ -227,7 +228,7 @@ export async function compressVideo(
       )} (${compressionRatio}% reduction)`
     );
 
-    const compressedBlob = new Blob([compressedBuffer], { type: "video/mp4" });
+    const compressedBlob = new Blob([new Uint8Array(compressedBuffer)], { type: "video/mp4" });
     const compressedFile = new File(
       [compressedBlob],
       `compressed_${videoFile.name.split(".")[0]}.mp4`,

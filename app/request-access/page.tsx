@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Loader2, CheckCircle } from "lucide-react";
 import { useAccessRequests } from "@/app/context/access-requests-context";
 import { AccessRequestsProvider } from "@/app/context/access-requests-context";
@@ -216,10 +216,32 @@ function RequestAccessForm() {
   );
 }
 
+function LoadingForm() {
+  return (
+    <div className="flex justify-center items-center mt-[15vh]">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-lg md:text-xl">Request Access</CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            Loading...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function RequestAccessPage() {
   return (
     <AccessRequestsProvider accessRequestsData={[]}>
-      <RequestAccessForm />
+      <Suspense fallback={<LoadingForm />}>
+        <RequestAccessForm />
+      </Suspense>
     </AccessRequestsProvider>
   );
 } 
