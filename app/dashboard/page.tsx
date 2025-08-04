@@ -197,11 +197,8 @@ function ValidatorItem({ validator, onEdit, onDelete }: ValidatorItemProps) {
 }
 
 export default function DashboardPage() {
-  const { milestones } = useMilestones();
+  const { milestones, selectedMilestone, setSelectedMilestone } = useMilestones();
   const { validators, addValidator, editValidator, removeValidator } = useValidators();
-  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(
-    milestones.length > 0 ? milestones[0] : null
-  );
   const [newValidatorDescription, setNewValidatorDescription] = useState("");
   const [isAddingValidator, setIsAddingValidator] = useState(false);
 
@@ -294,7 +291,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           )}
-
+  
           {/* Validators List */}
           <div className="space-y-4">
             {filteredValidators.length === 0 ? (
