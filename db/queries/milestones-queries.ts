@@ -66,7 +66,7 @@ export async function createMilestone(data: {
     headers: await headers()
   })
   if (!session?.user?.id) {
-    redirect("/sign-up")
+    redirect("/")
   }
   const result = await db.insert(milestones).values(data).returning();
   return result[0];
@@ -83,7 +83,7 @@ export async function updateMilestone(
     headers: await headers()
   })
   if (!session?.user?.id) {
-    redirect("/sign-up")
+    redirect("/")
   }
   const result = await db
     .update(milestones)
@@ -98,7 +98,7 @@ export async function deleteMilestone(id: number) {
     headers: await headers()
   })
   if (!session?.user?.id) {
-    redirect("/sign-up")
+    redirect("/")
   }
   
   // Then delete the milestone
