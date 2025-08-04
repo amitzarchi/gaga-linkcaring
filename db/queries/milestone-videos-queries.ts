@@ -3,23 +3,22 @@
 import { headers } from "next/dist/server/request/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { validators, milestones } from "@/db/schema";
+import { milestoneVideos } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
-// VALIDATOR CRUD OPERATIONS
-
-export async function getValidators() {
+export async function getMilestoneVideos() {
   const result = await db
     .select()
-    .from(validators)
+    .from(milestoneVideos)
   
   return result;
 }
 
-export async function createValidator(data: {
+export async function createMilestoneVideo(data: {
   milestoneId: number;
-  description: string;
+  achievedMilestone: string;
+  videoPath: string;
 }) {
   const session = await auth.api.getSession({
     headers: await headers()
@@ -27,14 +26,15 @@ export async function createValidator(data: {
   if (!session?.user?.id) {
     redirect("/")
   }
-  const result = await db.insert(validators).values(data).returning({id: validators.id});
+  const result = await db.insert(milestoneVideos).values(data).returning({id: milestoneVideos.id});
   return result[0].id;
 }
 
-export async function updateValidator(
+export async function updateMilestoneVideo(
   id: number,
   data: Partial<{
-    description: string;
+    achievedMilestone: string;
+    videoPath: string;
   }>
 ) {
   const session = await auth.api.getSession({
@@ -44,14 +44,14 @@ export async function updateValidator(
     redirect("/")
   }
   const result = await db
-    .update(validators)
+    .update(milestoneVideos)
     .set(data)
-    .where(eq(validators.id, id))
+    .where(eq(milestoneVideos.id, id))
     .returning();
   return result[0];
 }
 
-export async function deleteValidator(id: number) {
+export async function deleteMilestoneVideo(id: number) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -60,8 +60,8 @@ export async function deleteValidator(id: number) {
   }
   
   const result = await db
-    .delete(validators)
-    .where(eq(validators.id, id))
+    .delete(milestoneVideos)
+    .where(eq(milestoneVideos.id, id))
     .returning();
   return result[0];
-} 
+}
