@@ -13,50 +13,48 @@ import { useSession, signIn } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { APIError } from "better-auth/api";
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const { data } = useSession();
   if (data?.user) {
-    redirect("/app");
+    redirect("/dashboard");
   }
   return (
-      <div className="flex justify-center items-center mt-[20vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
-            <CardDescription className="text-xs md:text-sm">
-              Sign in to your account to continue
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2">
-              <div
-                className={cn(
-                  "w-full gap-2 flex items-center",
-                  "justify-between flex-col"
-                )}
+    <div className="flex justify-center items-center mt-[20vh]">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            Sign in to your account to continue
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-2">
+            <div
+              className={cn(
+                "w-full gap-2 flex items-center",
+                "justify-between flex-col"
+              )}
+            >
+              <Button
+                variant="outline"
+                className={cn("w-full gap-2")}
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true);
+                  await signIn.social({
+                    provider: "google",
+                    callbackURL: "/dashboard",
+                    errorCallbackURL: "/request-access",
+                  });
+                  setLoading(false);
+                }}
               >
-                <Button
-                  variant="outline"
-                  className={cn("w-full gap-2")}
-                  disabled={loading}
-                  onClick={async () => {
-                    setLoading(true);
-
-                    await signIn.social(
-                      {
-                        provider: "google",
-                        callbackURL: "/dashboard",
-                        errorCallbackURL: "/sign-in"
-                      },
-                    );
-                    setLoading(false);
-                  }}
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="0.98em"
@@ -80,13 +78,13 @@ export default function SignIn() {
                       d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
                     ></path>
                   </svg>
-                  )}
-                  Sign in with Google
-                </Button>
-              </div>
+                )}
+                Sign in with Google
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
