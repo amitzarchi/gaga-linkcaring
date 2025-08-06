@@ -41,14 +41,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
+import {
   PlusIcon,
   EditIcon,
   TrashIcon,
   CopyIcon,
   CheckIcon,
+  KeyIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth-client";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { IconWithBadge } from "@/components/icon-with-badge";
 
 interface CreateApiKeyModalProps {
   isOpen: boolean;
@@ -103,10 +112,10 @@ function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
     try {
       await navigator.clipboard.writeText(text);
       toast.success("API key copied to clipboard!");
-      
+
       // Set as recently copied
       setIsKeyCopied(true);
-      
+
       // Reset after 2 seconds
       setTimeout(() => {
         setIsKeyCopied(false);
@@ -291,6 +300,17 @@ function EditApiKeyModal({ apiKey, isOpen, onClose }: EditApiKeyModalProps) {
   );
 }
 
+const truncateApiKey = (
+  key: string,
+  prefixLength: number = 8,
+  suffixLength: number = 4
+) => {
+  if (key.length <= prefixLength + suffixLength + 3) {
+    return key;
+  }
+  return `${key.slice(0, prefixLength)}...${key.slice(-suffixLength)}`;
+};
+
 export default function ApiKeysPage() {
   const { apiKeys, removeApiKey } = useApiKeys();
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -335,47 +355,77 @@ export default function ApiKeysPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-        <Button onClick={() => setCreateModalOpen(true)}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Create API Key
-        </Button>
+    <div className="space-y-4 w-full">
+      {/* Header */}
+      <div className="space-y-0 w-full mb-10">
+        <h1 className="text-lg font-semibold w-full">API Keys</h1>
+        <p className="text-sm text-muted-foreground font-medium w-full">
+          Manage API keys for external integrations.
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>API Key Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {apiKeys.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No API keys found</p>
-              <Button onClick={() => setCreateModalOpen(true)}>
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Create Your First API Key
-              </Button>
-            </div>
-          ) : (
-            <Table>
+      {/* Header with actions */}
+      <div className="flex items-center justify-between w-full">
+        <div>
+          <h2 className="text-lg font-medium">
+            {" "}
+            {apiKeys.length} {apiKeys.length === 1 ? "Key" : "Keys"}
+          </h2>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => setCreateModalOpen(true)}
+              className="size-9 rounded-full p-0 flex items-center justify-center cursor-pointer"
+              size="icon"
+            >
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Create API Key</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <Separator className="w-full bg-gray-700/40 mb-8" />
+
+      {apiKeys.length === 0 ? (
+        <div className="flex flex-col gap-6 items-center justify-center py-12">
+          <IconWithBadge
+            icon={KeyIcon}
+            badgeText="0"
+            badgeColor="green"
+            size="lg"
+          />
+          <div className="flex flex-col gap-0 text-md items-center justify-center">
+            <h2 className=" font-medium">No API Keys</h2>
+            <p className="text-muted-foreground font-medium text-center">
+              No API keys found. Create your first API key to get started.
+            </p>
+          </div>
+        </div>
+      ) : (
+          <ScrollArea type="auto" className="w-full grid grid-cols-1">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>API Key</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Last Used</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-[200px]">API Key</TableHead>
+                  <TableHead className="w-[150px]">Name</TableHead>
+                  <TableHead className="w-[180px]">Owner</TableHead>
+                  <TableHead className="w-[120px]">Created</TableHead>
+                  <TableHead className="w-[120px]">Last Used</TableHead>
+                  <TableHead className="w-[100px]">Status</TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {apiKeys.map((apiKey) => (
                   <TableRow key={apiKey.id}>
-                    <TableCell className="font-mono text-sm">
+                    <TableCell className="font-mono text-sm w-[200px]">
                       <div className="flex items-center gap-2">
-                        <span>{apiKey.key}</span>
+                        <span className="px-2 py-1 bg-gray-800 text-gray-100 rounded text-xs">
+                          {truncateApiKey(apiKey.key)}
+                        </span>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -390,26 +440,28 @@ export default function ApiKeysPage() {
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {apiKey.name || (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                    <TableCell className="w-[150px]">
+                      <div className="truncate">
+                        {apiKey.name || (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[180px]">
                       {apiKey.owner ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           {apiKey.owner.avatar && (
                             <img
                               src={apiKey.owner.avatar}
                               alt={apiKey.owner.name}
-                              className="w-6 h-6 rounded-full"
+                              className="w-6 h-6 rounded-full flex-shrink-0"
                             />
                           )}
-                          <div className="text-sm">
-                            <div className="font-medium">
+                          <div className="text-sm min-w-0 flex-1">
+                            <div className="font-medium truncate">
                               {apiKey.owner.name}
                             </div>
-                            <div className="text-muted-foreground">
+                            <div className="text-muted-foreground text-xs truncate">
                               {apiKey.owner.email}
                             </div>
                           </div>
@@ -418,24 +470,24 @@ export default function ApiKeysPage() {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[120px]">
                       {new Date(apiKey.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[120px]">
                       {apiKey.lastUsedAt ? (
                         new Date(apiKey.lastUsedAt).toLocaleDateString()
                       ) : (
                         <span className="text-muted-foreground">Never</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[100px]">
                       <Badge
                         variant={apiKey.isActive ? "default" : "secondary"}
                       >
                         {apiKey.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="w-[120px]">
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
@@ -483,9 +535,9 @@ export default function ApiKeysPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+      )}
 
       <CreateApiKeyModal
         isOpen={createModalOpen}

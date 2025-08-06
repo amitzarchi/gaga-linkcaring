@@ -24,97 +24,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDownIcon, PlusIcon, EditIcon, TrashIcon, CheckIcon, XIcon } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, FileTextIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface MilestoneSelectorProps {
-  selectedMilestone: Milestone | null;
-  onSelect: (milestone: Milestone) => void;
-}
-
-function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSelectorProps) {
-  const { milestones } = useMilestones();
-  const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
-
-  const triggerContent = (
-    <div className={cn(
-      "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-6 py-4 text-left shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[60px]",
-      "cursor-pointer"
-    )}>
-      <div className="flex flex-col gap-1">
-        {selectedMilestone ? (
-          <>
-            <span className="font-medium text-lg">{selectedMilestone.name}</span>
-            <Badge variant="secondary" className="w-fit">
-              {selectedMilestone.category}
-            </Badge>
-          </>
-        ) : (
-          <span className="text-muted-foreground text-lg">Select a milestone...</span>
-        )}
-      </div>
-      <ChevronDownIcon className="h-5 w-5 opacity-50" />
-    </div>
-  );
-
-  const milestoneList = (
-    <ScrollArea className="h-[400px] p-4">
-      <div className="space-y-2">
-        {milestones.map((milestone) => (
-          <div
-            key={milestone.id}
-            className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => {
-              onSelect(milestone);
-              setOpen(false);
-            }}
-          >
-            <div className="flex flex-col gap-1">
-              <span className="font-medium">{milestone.name}</span>
-              <Badge variant="outline" className="w-fit text-xs">
-                {milestone.category}
-              </Badge>
-            </div>
-            {selectedMilestone?.id === milestone.id && (
-              <CheckIcon className="h-4 w-4 text-primary" />
-            )}
-          </div>
-        ))}
-      </div>
-    </ScrollArea>
-  );
-
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>
-          <div>{triggerContent}</div>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Select Milestone</DrawerTitle>
-          </DrawerHeader>
-          {milestoneList}
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <div>{triggerContent}</div>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Select Milestone</DialogTitle>
-        </DialogHeader>
-        {milestoneList}
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { Separator } from "@/components/ui/separator";
+import { MilestoneSelector } from "@/components/milestone-selector";
+import { IconWithBadge } from "@/components/icon-with-badge";
 
 interface ValidatorItemProps {
   validator: {
@@ -144,55 +59,63 @@ function ValidatorItem({ validator, onEdit, onDelete }: ValidatorItemProps) {
 
   if (isEditing) {
     return (
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex gap-2 items-center">
-            <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
-                if (e.key === "Escape") handleCancel();
-              }}
-              autoFocus
-            />
-            <Button size="sm" onClick={handleSave} disabled={!editValue.trim()}>
-              <CheckIcon className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancel}>
-              <XIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="border rounded-lg p-3 bg-white">
+        <div className="flex gap-2 items-center">
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="flex-1"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave();
+              if (e.key === "Escape") handleCancel();
+            }}
+            autoFocus
+          />
+          <Button 
+            size="sm" 
+            onClick={handleSave} 
+            disabled={!editValue.trim()}
+            className="h-8 w-8 p-0 rounded-full bg-black hover:bg-gray-800 text-white"
+          >
+            <CheckIcon className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleCancel}
+            className="h-8 w-8 p-0 rounded-full border-gray-300 text-black hover:bg-gray-50"
+          >
+            <XIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start gap-4">
-          <p className="flex-1 text-sm leading-relaxed">{validator.description}</p>
-          <div className="flex gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsEditing(true)}
-            >
-              <EditIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onDelete(validator.id)}
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="border rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors">
+      <div className="flex justify-between items-center gap-3">
+        <p className="flex-1 text-sm leading-relaxed">{validator.description}</p>
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsEditing(true)}
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100"
+          >
+            <PencilIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDelete(validator.id)}
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -219,13 +142,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full">
       {/* Milestone Selector */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Select a milestone to view and manage its validators
-        </p>
+      <div className="space-y-0 w-full">
+        <h1 className="text-lg font-semibold w-full">Milestones & Validators</h1>
+        <p className="text-sm text-muted-foreground font-medium w-full">Manage your milestones and validators.</p>
+      </div>
+      <div className="flex justify-center">
         <MilestoneSelector
           selectedMilestone={selectedMilestone}
           onSelect={setSelectedMilestone}
@@ -234,30 +157,32 @@ export default function DashboardPage() {
 
       {/* Validators Section */}
       {selectedMilestone && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4 w-full">
+          <div className="flex items-center justify-between w-full">
             <div>
-              <h2 className="text-2xl font-semibold">Validators</h2>
-              <p className="text-muted-foreground">
-                Validators for {selectedMilestone.name} ({filteredValidators.length} total)
-              </p>
+              <h2 className="text-lg font-medium ">Validators</h2>
             </div>
-            <Button
-              onClick={() => setIsAddingValidator(true)}
-              className="flex items-center gap-2"
-            >
-              <PlusIcon className="h-4 w-4" />
-              Add Validator
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => setIsAddingValidator(true)}
+                  className="size-9 rounded-full p-0 flex items-center justify-center cursor-pointer"
+                  size="icon"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add Validator</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
+          <Separator className="w-full" />
 
           {/* Add New Validator */}
           {isAddingValidator && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Add New Validator</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="border-2 rounded-lg p-3 bg-white w-full border-blue-500/30  text-blue-950 shadow-sm">
+              <div className="flex items-center gap-3">
                 <Input
                   placeholder="Enter validator description..."
                   value={newValidatorDescription}
@@ -270,44 +195,47 @@ export default function DashboardPage() {
                     }
                   }}
                   autoFocus
+                  className="flex-1"
                 />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleAddValidator}
-                    disabled={!newValidatorDescription.trim()}
-                  >
-                    Add Validator
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddingValidator(false);
-                      setNewValidatorDescription("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <Button
+                  onClick={handleAddValidator}
+                  disabled={!newValidatorDescription.trim()}
+                  size="icon"
+                  className="h-8 w-8 p-0 rounded-full bg-black hover:bg-gray-800 text-white"
+                >
+                  <CheckIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddingValidator(false);
+                    setNewValidatorDescription("");
+                  }}
+                  size="icon"
+                  className="h-8 w-8 p-0 rounded-full border-gray-300 text-black hover:bg-gray-50"
+                >
+                  <XIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
-  
           {/* Validators List */}
-          <div className="space-y-4">
+          <div className="space-y-3 w-full">
             {filteredValidators.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">
+              <div className="flex flex-col gap-6 items-center justify-center py-12">
+                <IconWithBadge
+                  icon={FileTextIcon}
+                  badgeText="0"
+                  badgeColor="blue"
+                  size="lg"
+                />
+                <div className="flex flex-col gap-0 text-md items-center justify-center">
+                  <h2 className=" font-medium">No Validators</h2>
+                  <p className="text-muted-foreground font-medium text-center">
                     No validators found for this milestone.
                   </p>
-                  <Button
-                    className="mt-4"
-                    onClick={() => setIsAddingValidator(true)}
-                  >
-                    Add First Validator
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ) : (
               filteredValidators.map((validator) => (
                 <ValidatorItem
@@ -323,13 +251,15 @@ export default function DashboardPage() {
       )}
 
       {!selectedMilestone && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">
-              Please select a milestone to view its validators.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex justify-center">
+          <Card className="w-full">
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">
+                Please select a milestone to view its validators.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
