@@ -1,4 +1,4 @@
-import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos } from "@/db/schema";
+import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults } from "@/db/schema";
 import { accessRequest } from "@/db/auth-schema";
 
 export type Milestone = {
@@ -13,8 +13,10 @@ export type MilestoneCategory = (typeof milestoneCategories.enumValues)[number];
 export type MilestoneAchievementRate = (typeof milestoneAchievementRates.enumValues)[number];
 
 export type Validator = typeof validators.$inferSelect;
+export type ValidatorInsert = typeof validators.$inferInsert;
 
 export type MilestoneVideo = typeof milestoneVideos.$inferSelect;
+export type MilestoneVideoInsert = typeof milestoneVideos.$inferInsert;
 
 export type AccessRequest = typeof accessRequest.$inferSelect;
 
@@ -34,6 +36,8 @@ export type ApiKey = {
   isActive: boolean;
 };
 
+export type ApiKeyInsert = typeof apiKeys.$inferInsert;
+
 export type User = {
   id: string;
   name: string;
@@ -43,3 +47,6 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type TestResult = typeof testResults.$inferSelect;
+export type TestResultInsert = typeof testResults.$inferInsert;
