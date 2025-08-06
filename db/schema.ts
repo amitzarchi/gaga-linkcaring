@@ -71,3 +71,18 @@ export const apiKeys = pgTable("api_keys", {
   lastUsedAt: timestamp("last_used_at"),
   isActive: boolean("is_active").default(true).notNull(),
 });
+
+export const testResults = pgTable("test_results", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  milestoneId: integer("milestone_id")
+    .notNull()
+    .references(() => milestones.id, { onDelete: "cascade" }),
+  videoId: integer("video_id")
+    .notNull()
+    .references(() => milestoneVideos.id, { onDelete: "cascade" }),
+  success: boolean("success").notNull(),
+  result: boolean("result").notNull(),
+  confidence: integer("confidence"), // Store as integer percentage (0-100)
+  error: text("error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

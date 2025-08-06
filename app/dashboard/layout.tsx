@@ -1,9 +1,11 @@
 import { getMilestones } from "@/db/queries/milestones-queries";
 import { getValidators } from "@/db/queries/validators-queries";
 import { getMilestoneVideos } from "@/db/queries/milestone-videos-queries";
+import { getTestResults } from "@/db/queries/test-results-queries";
 import { MilestonesProvider } from "../context/milestones-context";
 import { ValidatorsProvider } from "../context/validators-context";
 import { MilestoneVideosProvider } from "../context/milestone-videos-context";
+import { TestResultsProvider } from "../context/test-results-context";
 import {
   SidebarProvider,
   SidebarInset,
@@ -15,6 +17,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { AccessRequestsProvider } from "../context/access-requests-context";
 import { getAccessRequests } from "@/db/queries/access-requests-queries";
+import { ApiKeysProvider } from "../context/api-keys-context";
+import { getApiKeys } from "@/db/queries/api-keys-queries";
 
 export default async function DashboardLayout({
   children,
@@ -22,40 +26,55 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await auth.api.getSession({
-    headers: await headers()
-})
+    headers: await headers(),
+  });
 
-if(!session) {
-    redirect("/")
-}  
-  const [milestones, validators, milestoneVideos, accessRequests] = await Promise.all([
+  if (!session) {
+    redirect("/");
+  }
+  const [
+    milestones,
+    validators,
+    milestoneVideos,
+    testResults,
+    accessRequests,
+    apiKeys,
+  ] = await Promise.all([
     getMilestones(),
     getValidators(),
     getMilestoneVideos(),
+    getTestResults(),
     getAccessRequests(),
+    getApiKeys(),
   ]);
 
   return (
-    <AccessRequestsProvider accessRequestsData={accessRequests}>
-    <MilestonesProvider milestonesData={milestones}>
-      <ValidatorsProvider validatorsData={validators}>
-        <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <div className="flex flex-1 flex-col w-full">
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-                  <SidebarTrigger className="-ml-1" />
-                </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 max-w-7xl mx-auto">
-                  {children}
-                </div>
-              </div>
-            </SidebarInset>
-          </SidebarProvider>
-        </MilestoneVideosProvider>
-      </ValidatorsProvider>
-      </MilestonesProvider>
-    </AccessRequestsProvider>
+    <ApiKeysProvider apiKeysData={apiKeys}>
+      <AccessRequestsProvider accessRequestsData={accessRequests}>
+        <MilestonesProvider milestonesData={milestones}>
+          <ValidatorsProvider validatorsData={validators}>
+            <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
+              <TestResultsProvider testResultsData={testResults}>
+                <SidebarProvider>
+                  <AppSidebar />
+                  <SidebarInset>
+                    <div className="flex flex-1 flex-col w-full">
+                      <header className="flex h-16 md:h-2 shrink-0 items-center gap-2 px-4">
+                        <SidebarTrigger className="-ml-1 md:hidden" />
+                      </header>
+                      <div className="flex flex-1 justify-center w-full">
+                        <div className="flex flex-1 flex-col gap-4 p-4 max-w-4xl md:px-6">
+                          {children}
+                        </div>
+                      </div>
+                    </div>
+                  </SidebarInset>
+                </SidebarProvider>
+              </TestResultsProvider>
+            </MilestoneVideosProvider>
+          </ValidatorsProvider>
+        </MilestonesProvider>
+      </AccessRequestsProvider>
+    </ApiKeysProvider>
   );
 }
