@@ -9,12 +9,7 @@ import React, {
 } from "react";
 import { createValidator, deleteValidator, updateValidator } from "@/db/queries/validators-queries";
 import { toast } from "sonner";
-
-type Validator = {
-  id: number;
-  milestoneId: number;
-  description: string;
-};
+import { Validator, ValidatorInsert } from "@/lib/defs";
 
 type ValidatorsContextType = {
   validators: Validator[];
@@ -41,17 +36,29 @@ export function ValidatorsProvider({
   }, [validatorsData]);
 
   const addValidator = async ({milestoneId, description}: {milestoneId: number, description: string}) => {
-    const validator: Validator = {
+    // Create temporary validator for optimistic update
+    const tempValidator: Validator = {
       id: 0,
       milestoneId,
       description
-    }
-    setValidators([...validators, validator]);
+    };
+    
+    // Optimistic update
+    setValidators([...validators, tempValidator]);
+    
     try {
-      const newValidatorId = await createValidator(validator);
+      const validatorInsert: ValidatorInsert = {
+        milestoneId,
+        description
+      };
+      
+      const newValidatorId = await createValidator(validatorInsert);
+      
+      // Update with real ID
       setValidators((prev) => prev?.map((v) => v.id === 0 ? { ...v, id: newValidatorId } : v));
       toast.success("Validator added successfully");
     } catch (error) {
+      // Remove temp validator on error
       setValidators((prev) => prev?.filter((v) => v.id !== 0));
       toast.error("Error adding validator");
     }
