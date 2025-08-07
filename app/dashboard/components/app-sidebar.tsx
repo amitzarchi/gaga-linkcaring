@@ -1,5 +1,4 @@
 "use client"
-
 import {
   Sidebar,
   SidebarContent,
@@ -7,35 +6,34 @@ import {
   SidebarHeader,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuBadge,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSession, signOut } from "@/lib/auth-client"
+import { useAccessRequests } from "@/app/context/access-requests-context"
 import { 
   CheckSquare, 
   Play, 
   Key, 
   Users, 
-  ChevronUp,
   LogOut,
-  Settings,
-  User
+  ListChecks
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
-const menuItems = [
+// Bagel Fat One font is now provided globally via `app/layout.tsx` as CSS var `--font-gaga`
+
+const workspaceItems = [
   {
     title: "Milestones & Validators",
-    icon: CheckSquare,
+    icon: ListChecks,
     url: "/dashboard",
   },
   {
@@ -43,6 +41,9 @@ const menuItems = [
     icon: Play,
     url: "/dashboard/test-runner",
   },
+]
+
+const serviceItems = [
   {
     title: "API Keys",
     icon: Key,
@@ -58,6 +59,10 @@ const menuItems = [
 export function AppSidebar() {
   const { data: session } = useSession()
   const router = useRouter()
+  const { accessRequests } = useAccessRequests()
+  
+  // Calculate pending requests count
+  const pendingRequestsCount = accessRequests.filter(request => request.status === "PENDING").length
 
   const handleSignOut = async () => {
     await signOut({
@@ -72,19 +77,22 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
-          gaga admin panel
+          <span className="[font-family:var(--font-gaga)] text-2xl">gaga </span>
+          <span className="text-2xl font-medium">X </span>
+          <span className="font-inter font-bold">LinkCaring </span>
         </div>
       </SidebarHeader>
       
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>WORKSPACE</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon className="size-4" />
+              {workspaceItems.map((item) => (
+                <SidebarMenuItem key={item.title} className="">
+                  <SidebarMenuButton asChild className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50">
+                    <Link href={item.url} className="flex items-center gap-4 py-5">
+                      <item.icon className="!size-5" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -93,51 +101,63 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>SERVICES</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {serviceItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50">
+                    <Link href={item.url} className="flex items-center gap-4 py-5">
+                      <item.icon className="!size-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  {item.title === "Admins & Requests" && pendingRequestsCount > 0 && (
+                    <SidebarMenuBadge className="mt-1">{pendingRequestsCount}</SidebarMenuBadge>
+                  )}
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                  <Avatar className="size-6">
-                    <AvatarImage src={session?.user?.image || ""} />
-                    <AvatarFallback>
-                      {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start text-left">
-                    <span className="text-sm font-medium">
-                      {session?.user?.name || "User"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {session?.user?.email || ""}
-                    </span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
-                <DropdownMenuItem>
-                  <User className="size-4 mr-2" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="size-4 mr-2" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="size-4 mr-2" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="p-4 pr-2">
+        <div className="flex items-center gap-3 hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 rounded-lg p-2 transition-all">
+          <Avatar className="size-8">
+            <AvatarImage src={session?.user?.image || ""} />
+            <AvatarFallback>
+              {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col items-start text-left flex-1 group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-medium">
+              {session?.user?.name || "User"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {session?.user?.email || ""}
+            </span>
+          </div>
+          <TooltipProvider>
+            <Tooltip delayDuration={1000}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSignOut}
+                  className="size-8 group-data-[collapsible=icon]:size-8 hover:bg-gray-200"
+                >
+                  <LogOut className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Sign out</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

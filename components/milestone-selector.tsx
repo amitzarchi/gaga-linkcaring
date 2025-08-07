@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMilestones } from "@/app/context/milestones-context";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Milestone } from "@/lib/defs";
@@ -21,8 +21,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDownIcon, CheckIcon } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Helper function to format category names
 function formatCategoryName(category: string): string {
@@ -77,18 +85,56 @@ export function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSele
   const { milestones } = useMilestones();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+
+  const categories = useMemo(() => {
+    const unique = new Set<string>();
+    milestones.forEach((m) => unique.add(m.category));
+    return Array.from(unique);
+  }, [milestones]);
+
+  const filteredMilestones = useMemo(() => {
+    const byCategory = categoryFilter === "ALL"
+      ? milestones
+      : milestones.filter((m) => m.category === categoryFilter);
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return byCategory;
+    return byCategory.filter((m) => m.name.toLowerCase().includes(query));
+  }, [milestones, categoryFilter, searchQuery]);
+
+  // Keyboard shortcut: if one item after filtering, Enter selects it
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      const isSelectOpen = !!document.querySelector(
+        '[data-slot="select-content"][data-state="open"]'
+      );
+      if (isSelectOpen) return;
+      if (e.key === "Enter" && filteredMilestones.length === 1) {
+        e.preventDefault();
+        const only = filteredMilestones[0];
+        if (only) {
+          onSelect(only);
+          setOpen(false);
+        }
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, filteredMilestones, onSelect]);
 
   const triggerContent = (
     <Button 
       variant="outline" 
       className={cn(
-        "h-14 gap-4 border-0 cursor-pointer",
+        "h-fit min-h-14 gap-4 text-wrap border-0 cursor-pointer",
         selectedMilestone ? getCategoryBackgroundColor(selectedMilestone.category) : "bg-gray-50 hover:bg-gray-100 ring-1 ring-inset ring-black/10 shadow-sm"
       )}
     >
       {selectedMilestone ? (
         <>
-          <span className="font-medium text-lg">{selectedMilestone.name}</span>
+          <span className="font-medium text-lg text-left text-wrap ">{selectedMilestone.name}</span>
           <Badge className={cn("w-fit", getCategoryBadgeStyles(selectedMilestone.category, 'extra-white'))}>
             {formatCategoryName(selectedMilestone.category)}
           </Badge>
@@ -100,31 +146,71 @@ export function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSele
     </Button>
   );
 
-  const milestoneList = (
-    <ScrollArea className="h-[400px] p-4">
-      <div className="space-y-2">
-        {milestones.map((milestone) => (
-          <div
-            key={milestone.id}
-            className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => {
-              onSelect(milestone);
-              setOpen(false);
-            }}
-          >
-            <div className="flex gap-2 justify-between w-full">
-              <span className="font-medium">{milestone.name}</span>
-              <Badge className={cn("w-fit h-fit text-xs", getCategoryBadgeStyles(milestone.category))}>
-                {formatCategoryName(milestone.category)}
-              </Badge>
-            </div>
-            {selectedMilestone?.id === milestone.id && (
-              <CheckIcon className="h-4 w-4 text-primary " />
-            )}
-          </div>
-        ))}
+  const filters = (
+    <div className="flex flex-col gap-2 p-4 pt-0">
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <Input
+            placeholder="Search milestones by name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {formatCategoryName(cat)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-    </ScrollArea>
+    </div>
+  );
+
+  const milestoneList = (
+    <>
+      {filters}
+      <ScrollArea className="h-[400px] px-4 pb-4">
+        <div className="space-y-2">
+          {filteredMilestones.map((milestone) => {
+            const isSelected = selectedMilestone?.id === milestone.id;
+            return (
+              <div
+                key={milestone.id}
+                className={cn(
+                  "relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors border border-transparent",
+                  getCategoryBackgroundColor(milestone.category),
+                  isSelected && "border-primary/60 shadow-[0_0_0_2px_rgba(0,0,0,0.02)]"
+                )}
+                onClick={() => {
+                  onSelect(milestone);
+                  setOpen(false);
+                }}
+              >
+                <div className="flex gap-2 justify-between w-full pr-6">
+                  <span className="font-medium">{milestone.name}</span>
+                  <Badge className={cn("w-fit h-fit text-xs", getCategoryBadgeStyles(milestone.category))}>
+                    {formatCategoryName(milestone.category)}
+                  </Badge>
+                </div>
+                {isSelected && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 inline-block size-2 rounded-full bg-primary" />
+                )}
+              </div>
+            );
+          })}
+          {filteredMilestones.length === 0 && (
+            <div className="text-sm text-muted-foreground px-1 py-4">No milestones found</div>
+          )}
+        </div>
+      </ScrollArea>
+    </>
   );
 
   if (isMobile) {
