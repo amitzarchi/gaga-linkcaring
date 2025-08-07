@@ -22,7 +22,15 @@ export default function SignIn() {
     redirect("/dashboard");
   }
   return (
-    <div className="flex justify-center items-center mt-[20vh]">
+    <div className="min-h-screen px-2 w-full bg-[url('/bg-doodles2.jpg')] bg-repeat bg-center flex flex-col justify-start items-center gap-2 pt-[20vh] pb-10">
+      <div className="text-lg z-30 bg-white/70  rounded-lg px-3 1 shadow-[0_0_20px_rgba(255,255,255,0.6)]">
+        <span className="[font-family:var(--font-gaga)] text-3xl md:text-3xl">gaga </span>
+        <span className="text-3xl md:text-3xl font-medium">X </span>
+        <span className="font-inter font-medium text-3xl md:text-3xl">LinkCaring </span>
+      </div>
+      <div className="text-md font-bold mb-2 z-30 bg-white/80  rounded-lg px-3 shadow-[0_0_20px_rgba(255,255,255,0.6)]">
+        <span>Admin Panel</span>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
@@ -49,7 +57,6 @@ export default function SignIn() {
                     callbackURL: "/dashboard",
                     errorCallbackURL: "/request-access",
                   });
-                  setLoading(false);
                 }}
               >
                 {loading ? (
