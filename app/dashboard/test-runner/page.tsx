@@ -445,7 +445,7 @@ export default function TestRunnerPage() {
                 <VideoUploader onFileChange={handleFileChange} />
 
                 {/* Video Name and Achievement Toggle Row */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Video Name - 1/2 width */}
                   <div className="space-y-2">
                     <Label htmlFor="videoName">Video Name</Label>
@@ -457,16 +457,16 @@ export default function TestRunnerPage() {
                     />
                   </div>
 
-                  {/* Achievement Toggle - 1/2 width */}
+                  {/* Achievement Toggle - responsive */}
                   <div className="space-y-2">
                     <Label>Achievement Status</Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         type="button"
                         variant={achievedMilestone === "true" ? "default" : "outline"}
                         onClick={() => setAchievedMilestone("true")}
                         className={cn(
-                          "flex-1",
+                          "sm:flex-1 w-full sm:w-auto",
                           achievedMilestone === "true" 
                             ? "bg-green-600 hover:bg-green-700 border-green-600 text-white" 
                             : "border-green-600 text-green-600 hover:bg-green-50"
@@ -479,7 +479,7 @@ export default function TestRunnerPage() {
                         variant={achievedMilestone === "false" ? "default" : "outline"}
                         onClick={() => setAchievedMilestone("false")}
                         className={cn(
-                          "flex-1",
+                          "sm:flex-1 w-full sm:w-auto",
                           achievedMilestone === "false" 
                             ? "bg-red-600 hover:bg-red-700 border-red-600 text-white" 
                             : "border-red-600 text-red-600 hover:bg-red-50"
