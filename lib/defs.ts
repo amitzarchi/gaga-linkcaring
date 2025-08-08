@@ -1,11 +1,12 @@
-import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults } from "@/db/schema";
+import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults, policies } from "@/db/schema";
 import { accessRequest } from "@/db/auth-schema";
 
 export type Milestone = {
     id: number;
     name: string;
     category: MilestoneCategory;
-    ageStatuses: Map<number, MilestoneAchievementRate>
+    ageStatuses: Map<number, MilestoneAchievementRate>;
+    policyId: number | null;
   }
   
 export type MilestoneCategory = (typeof milestoneCategories.enumValues)[number];
@@ -50,3 +51,6 @@ export type User = {
 
 export type TestResult = typeof testResults.$inferSelect;
 export type TestResultInsert = typeof testResults.$inferInsert;
+
+export type Policy = typeof policies.$inferSelect;
+export type PolicyInsert = typeof policies.$inferInsert;

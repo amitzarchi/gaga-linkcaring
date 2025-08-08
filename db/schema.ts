@@ -16,10 +16,24 @@ export const milestoneCategories = pgEnum("milestone_categories", [
   "GROSS_MOTOR",
 ]);
 
+// Policies table
+export const policies = pgTable("policies", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  // Percentage of validators that must pass (0-100)
+  minValidatorsPassed: integer("min_validators_passed").notNull(),
+  // Minimum confidence threshold (0-100)
+  minConfidence: integer("min_confidence").notNull(),
+  // Whether this policy acts as the default when a milestone has no explicit policy
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const milestones = pgTable("milestones", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
   category: milestoneCategories("category").notNull(), // e.g., 'SOCIAL', 'LANGUAGE', 'FINE_MOTOR', 'GROSS_MOTOR'
+  policyId: integer("policy_id").references(() => policies.id, { onDelete: "set null" }),
 });
 
 export const validators = pgTable("validators", {

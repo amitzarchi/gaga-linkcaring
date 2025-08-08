@@ -23,6 +23,7 @@ export async function getMilestones(): Promise<Milestone[]> {
       id: milestones.id,
       name: milestones.name,
       category: milestones.category,
+      policyId: milestones.policyId,
     })
     .from(milestones)
     .orderBy(asc(milestones.id));
@@ -46,10 +47,11 @@ export async function getMilestones(): Promise<Milestone[]> {
   }
 
   // 4. Assemble Milestone[] with ageStatuses maps
-  return allMilestones.map(({ id, name, category }) => ({
+  return allMilestones.map(({ id, name, category, policyId }) => ({
     id,
     name,
     category,
+    policyId,
     ageStatuses: statusMap.get(id) ?? new Map(),
   }));
 }

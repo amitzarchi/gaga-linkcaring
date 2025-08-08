@@ -3,6 +3,7 @@ import { getValidators } from "@/db/queries/validators-queries";
 import { getMilestoneVideos } from "@/db/queries/milestone-videos-queries";
 import { getTestResults } from "@/db/queries/test-results-queries";
 import { MilestonesProvider } from "../context/milestones-context";
+import { PoliciesProvider } from "../context/policies-context";
 import { ValidatorsProvider } from "../context/validators-context";
 import { MilestoneVideosProvider } from "../context/milestone-videos-context";
 import { TestResultsProvider } from "../context/test-results-context";
@@ -19,6 +20,7 @@ import { AccessRequestsProvider } from "../context/access-requests-context";
 import { getAccessRequests } from "@/db/queries/access-requests-queries";
 import { ApiKeysProvider } from "../context/api-keys-context";
 import { getApiKeys } from "@/db/queries/api-keys-queries";
+import { getPolicies } from "@/db/queries/policies-queries";
 
 export default async function DashboardLayout({
   children,
@@ -39,6 +41,7 @@ export default async function DashboardLayout({
     testResults,
     accessRequests,
     apiKeys,
+    policies,
   ] = await Promise.all([
     getMilestones(),
     getValidators(),
@@ -46,12 +49,14 @@ export default async function DashboardLayout({
     getTestResults(),
     getAccessRequests(),
     getApiKeys(),
+    getPolicies(),
   ]);
 
   return (
     <ApiKeysProvider apiKeysData={apiKeys}>
       <AccessRequestsProvider accessRequestsData={accessRequests}>
         <MilestonesProvider milestonesData={milestones}>
+          <PoliciesProvider policiesData={policies}>
           <ValidatorsProvider validatorsData={validators}>
             <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
               <TestResultsProvider testResultsData={testResults}>
@@ -73,6 +78,7 @@ export default async function DashboardLayout({
               </TestResultsProvider>
             </MilestoneVideosProvider>
           </ValidatorsProvider>
+          </PoliciesProvider>
         </MilestonesProvider>
       </AccessRequestsProvider>
     </ApiKeysProvider>
