@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Sidebar,
   SidebarContent,
@@ -11,22 +11,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuBadge,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useSession, signOut } from "@/lib/auth-client"
-import { useAccessRequests } from "@/app/context/access-requests-context"
-import { 
-  CheckSquare, 
-  Play, 
-  Key, 
-  Users, 
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useSession, signOut } from "@/lib/auth-client";
+import { useAccessRequests } from "@/app/context/access-requests-context";
+import {
+  CheckSquare,
+  Play,
+  Key,
+  Users,
   LogOut,
-  ListChecks
-} from "lucide-react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+  ListChecks,
+  Shield,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // Bagel Fat One font is now provided globally via `app/layout.tsx` as CSS var `--font-gaga`
 
@@ -37,11 +43,16 @@ const workspaceItems = [
     url: "/dashboard",
   },
   {
+    title: "Policies",
+    icon: Shield,
+    url: "/dashboard/policies",
+  },
+  {
     title: "Test Runner",
     icon: Play,
     url: "/dashboard/test-runner",
   },
-]
+];
 
 const serviceItems = [
   {
@@ -54,15 +65,17 @@ const serviceItems = [
     icon: Users,
     url: "/dashboard/admins",
   },
-]
+];
 
 export function AppSidebar() {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const { accessRequests } = useAccessRequests()
-  
+  const { data: session } = useSession();
+  const router = useRouter();
+  const { accessRequests } = useAccessRequests();
+
   // Calculate pending requests count
-  const pendingRequestsCount = accessRequests.filter(request => request.status === "PENDING").length
+  const pendingRequestsCount = accessRequests.filter(
+    (request) => request.status === "PENDING"
+  ).length;
 
   const handleSignOut = async () => {
     await signOut({
@@ -71,18 +84,21 @@ export function AppSidebar() {
           router.push("/");
         },
       },
-    });  }
+    });
+  };
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
-          <span className="[font-family:var(--font-gaga)] text-2xl">gaga </span>
+          <span className="[font-family:var(--font-gaga)] font-normal text-2xl">
+            gaga{" "}
+          </span>
           <span className="text-2xl font-medium">X </span>
           <span className="font-inter font-bold">LinkCaring </span>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>WORKSPACE</SidebarGroupLabel>
@@ -90,8 +106,14 @@ export function AppSidebar() {
             <SidebarMenu>
               {workspaceItems.map((item) => (
                 <SidebarMenuItem key={item.title} className="">
-                  <SidebarMenuButton asChild className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50">
-                    <Link href={item.url} className="flex items-center gap-4 py-5">
+                  <SidebarMenuButton
+                    asChild
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50"
+                  >
+                    <Link
+                      href={item.url}
+                      className="flex items-center gap-4 py-5"
+                    >
                       <item.icon className="!size-5" />
                       <span>{item.title}</span>
                     </Link>
@@ -101,22 +123,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         <SidebarGroup>
           <SidebarGroupLabel>SERVICES</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {serviceItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50">
-                    <Link href={item.url} className="flex items-center gap-4 py-5">
+                  <SidebarMenuButton
+                    asChild
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50"
+                  >
+                    <Link
+                      href={item.url}
+                      className="flex items-center gap-4 py-5"
+                    >
                       <item.icon className="!size-5" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
-                  {item.title === "Admins & Requests" && pendingRequestsCount > 0 && (
-                    <SidebarMenuBadge className="mt-1">{pendingRequestsCount}</SidebarMenuBadge>
-                  )}
+                  {item.title === "Admins & Requests" &&
+                    pendingRequestsCount > 0 && (
+                      <SidebarMenuBadge className="mt-1">
+                        {pendingRequestsCount}
+                      </SidebarMenuBadge>
+                    )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -140,25 +171,25 @@ export function AppSidebar() {
               {session?.user?.email || ""}
             </span>
           </div>
-          <TooltipProvider>
+          {/* <TooltipProvider>
             <Tooltip delayDuration={1000}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSignOut}
-                  className="size-8 group-data-[collapsible=icon]:size-8 hover:bg-gray-200"
-                >
-                  <LogOut className="size-4" />
-                </Button>
-              </TooltipTrigger>
+              <TooltipTrigger asChild> */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSignOut}
+            className="size-8 group-data-[collapsible=icon]:size-8 hover:bg-gray-200"
+          >
+            <LogOut className="size-4" />
+          </Button>
+          {/* </TooltipTrigger>
               <TooltipContent>
                 <p>Sign out</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          </TooltipProvider> */}
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
-} 
+  );
+}
