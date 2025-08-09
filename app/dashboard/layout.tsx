@@ -21,6 +21,8 @@ import { getAccessRequests } from "@/db/queries/access-requests-queries";
 import { ApiKeysProvider } from "../context/api-keys-context";
 import { getApiKeys } from "@/db/queries/api-keys-queries";
 import { getPolicies } from "@/db/queries/policies-queries";
+import { getCurrentSystemPrompt } from "@/db/queries/system-prompt-queries";
+import { SystemPromptProvider } from "../context/system-prompt-context";
 
 export default async function DashboardLayout({
   children,
@@ -42,6 +44,7 @@ export default async function DashboardLayout({
     accessRequests,
     apiKeys,
     policies,
+    systemPrompt,
   ] = await Promise.all([
     getMilestones(),
     getValidators(),
@@ -50,6 +53,7 @@ export default async function DashboardLayout({
     getAccessRequests(),
     getApiKeys(),
     getPolicies(),
+    getCurrentSystemPrompt(),
   ]);
 
   return (
@@ -60,6 +64,7 @@ export default async function DashboardLayout({
           <ValidatorsProvider validatorsData={validators}>
             <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
               <TestResultsProvider testResultsData={testResults}>
+                <SystemPromptProvider initialCurrent={systemPrompt as any}>
                 <SidebarProvider>
                   <AppSidebar />
                   <SidebarInset>
@@ -75,6 +80,7 @@ export default async function DashboardLayout({
                     </div>
                   </SidebarInset>
                 </SidebarProvider>
+                </SystemPromptProvider>
               </TestResultsProvider>
             </MilestoneVideosProvider>
           </ValidatorsProvider>

@@ -100,3 +100,12 @@ export const testResults = pgTable("test_results", {
   error: text("error"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// System prompt change history (append-only). Latest row is the current prompt
+export const systemPromptHistory = pgTable("system_prompt_history", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  content: text("content").notNull(),
+  changeNote: text("change_note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdBy: text("created_by").references(() => user.id),
+});
