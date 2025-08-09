@@ -126,20 +126,23 @@ export default function AdminsPage() {
       </div>
 
       <Tabs defaultValue="members" className="w-full">
-        <TabsList className="mb-4 text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1 w-full justify-start">
-          <TabsTrigger
-            value="members"
-            className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            Members ({users.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="requests"
-            className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            Requests ({pendingRequests.length} pending)
-          </TabsTrigger>
-        </TabsList>
+        <ScrollArea type="auto" className="w-full">
+          <TabsList className="mb-4 text-foreground h-auto gap-2 rounded-none border-b bg-transparent px-0 py-1 w-max whitespace-nowrap justify-start">
+            <TabsTrigger
+              value="members"
+              className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              Members ({users.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="requests"
+              className="hover:bg-accent hover:text-foreground data-[state=active]:after:bg-primary data-[state=active]:hover:bg-accent relative after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              Requests ({pendingRequests.length} pending)
+            </TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
 
         <TabsContent value="members" className="space-y-6">
           {/* Users Table */}
@@ -328,14 +331,14 @@ export default function AdminsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 p-3 bg-muted rounded-lg font-mono text-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="w-full sm:flex-1 p-3 bg-muted rounded-lg font-mono text-sm break-all">
               {typeof window !== 'undefined' ? `${window.location.origin}/request-access` : '/request-access'}
             </div>
             <Button
               onClick={copyInviteLink}
               variant="outline"
-              className="flex items-center gap-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2"
             >
               {linkCopied ? (
                 <>
