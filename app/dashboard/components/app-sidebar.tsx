@@ -30,6 +30,7 @@ import {
   LogOut,
   ListChecks,
   Shield,
+  FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -51,6 +52,11 @@ const workspaceItems = [
     title: "Test Runner",
     icon: Play,
     url: "/dashboard/test-runner",
+  },
+  {
+    title: "System Prompt",
+    icon: FileText,
+    url: "/dashboard/system-prompt",
   },
 ];
 
@@ -114,7 +120,7 @@ export function AppSidebar() {
                       href={item.url}
                       className="flex items-center gap-4 py-5"
                     >
-                      <item.icon className="!size-5" />
+                      <item.icon className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[15deg]" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -138,7 +144,7 @@ export function AppSidebar() {
                       href={item.url}
                       className="flex items-center gap-4 py-5"
                     >
-                      <item.icon className="!size-5" />
+                      <item.icon className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[15deg]" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

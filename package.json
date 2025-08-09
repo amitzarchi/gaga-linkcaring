@@ -10,7 +10,8 @@
     "seed": "tsx db/seed/index.ts",
     "seed:milestones": "tsx db/seed/seed-milestones.ts",
     "seed:milestone-age-statuses": "tsx db/seed/seed-milestone-age-statuses.ts",
-    "seed:validators": "tsx db/seed/seed-validators.ts"
+    "seed:validators": "tsx db/seed/seed-validators.ts",
+    "seed:systemprompt": "tsx db/seed/seed-system-prompt.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.859.0",
