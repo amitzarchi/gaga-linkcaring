@@ -147,6 +147,7 @@ export default function TestRunnerPage() {
       setIsAddingVideo(false);
     } catch (error) {
       console.error("Error adding video:", error);
+      throw error;
     } finally {
       setIsUploading(false);
     }
