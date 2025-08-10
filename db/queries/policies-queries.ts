@@ -9,6 +9,11 @@ export async function getPolicies() {
   return rows;
 }
 
+export async function getPolicyById(id: number) {
+  const [row] = await db.select().from(policies).where(eq(policies.id, id)).limit(1);
+  return row;
+}
+
 export async function getDefaultPolicy() {
   const rows = await db
     .select()

@@ -59,6 +59,15 @@ export async function getMilestones(): Promise<Milestone[]> {
 
 
 
+export async function getMilestoneById(id: number): Promise<{ name: string, policyId: number | null } | null> {
+  const [row] = await db
+    .select({ name: milestones.name, policyId: milestones.policyId })
+    .from(milestones)
+    .where(eq(milestones.id, id))
+    .limit(1);
+  return row;
+}
+
 export async function createMilestone(data: {
   id: number;
   name: string;

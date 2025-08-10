@@ -17,6 +17,14 @@ export async function getValidators() {
   return result;
 }
 
+export async function getValidatorsByMilestone(milestoneId: number) {
+  const result = await db
+    .select()
+    .from(validators)
+    .where(eq(validators.milestoneId, milestoneId));
+  return result;
+}
+
 export async function createValidator(data: {
   milestoneId: number;
   description: string;
