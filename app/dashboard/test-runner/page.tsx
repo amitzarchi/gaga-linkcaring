@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { analyzeMilestoneVideo } from "@/lib/endpoints";
 import { useMilestones } from "../../context/milestones-context";
 import { useMilestoneVideos } from "../../context/milestone-videos-context";
 import { useTestResults } from "../../context/test-results-context";
@@ -166,20 +167,10 @@ export default function TestRunnerPage() {
     );
 
     try {
-      // TODO: Replace with actual API endpoint
-      const response = await fetch("/api/test-milestone", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          videoPath: video.videoPath,
-          milestoneId: selectedMilestone.id,
-          achievedMilestone: video.achievedMilestone === "true",
-        }),
+      const data = await analyzeMilestoneVideo({
+        videoPath: video.videoPath,
+        milestoneId: selectedMilestone.id,
       });
-
-      const data = await response.json();
 
       const testResult: TestResult = {
         success: data.result === (video.achievedMilestone === "true"),
@@ -198,7 +189,7 @@ export default function TestRunnerPage() {
             })
           )
       );
-
+      console.log("testResult", testResult);
       // Save test result to database
       try {
         await addTestResult({
