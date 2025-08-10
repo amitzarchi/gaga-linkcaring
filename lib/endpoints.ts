@@ -44,7 +44,8 @@ export async function analyzeMilestoneVideo(params: {
     ? contentType
     : inferMimeType(filename, contentType);
 
-  const blob = new Blob([buffer], { type: mimeType });
+  const byteArray = new Uint8Array(buffer);
+  const blob = new Blob([byteArray], { type: mimeType });
   const formData = new FormData();
   formData.append("video", blob, filename);
   formData.append("milestoneId", String(milestoneId));
