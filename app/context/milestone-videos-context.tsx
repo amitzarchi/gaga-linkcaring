@@ -74,6 +74,7 @@ export function MilestoneVideosProvider({
     } catch (error) {
       console.error("Error adding milestone video:", error);
       toast.error("Error adding milestone video");
+      throw error;
     }
   }
 
