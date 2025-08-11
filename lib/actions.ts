@@ -5,13 +5,14 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { writeFile, readFile, unlink, mkdir, access } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 
 const s3Client = new S3Client({
-  region: "auto", // R2 uses 'auto' as the region
-  endpoint: process.env.R2_ENDPOINT, // Your R2 endpoint
+  region: "auto", 
+  endpoint: process.env.R2_ENDPOINT,
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
@@ -87,6 +88,27 @@ export async function uploadFile(
     console.error("Error uploading file to R2:", error);
     throw new Error(`Failed to upload file: ${error}`);
   }
+}
+
+export async function createPresignedUpload(params: {
+  baseName: string;
+  extension: string;
+  contentType: string;
+}): Promise<{ url: string; key: string }> {
+  const { baseName, extension, contentType } = params;
+
+  const timestamp = Date.now();
+  const safeExt = (extension || "mp4").replace(/^\./, "");
+  const uniqueFileName = `${baseName}_${timestamp}.${safeExt}`;
+
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: uniqueFileName,
+    ContentType: contentType || "application/octet-stream",
+  });
+
+  const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+  return { url, key: uniqueFileName };
 }
 
 export async function getFileFromR2(
@@ -336,7 +358,6 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-// Updated uploadVideo function with compression option
 export async function uploadVideo(videoFile: File, videoName: string) {
   let processedVideo = videoFile;
 

@@ -14,7 +14,8 @@
     "seed:systemprompt": "tsx db/seed/seed-system-prompt.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.859.0",
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
     "@google/genai": "^1.13.0",
     "@hookform/resolvers": "^5.2.1",
     "@neondatabase/serverless": "^1.0.1",
@@ -75,7 +76,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
-    "@types/node": "^20.19.9",
+    "@types/node": "^20.19.10",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "drizzle-kit": "^0.31.4",

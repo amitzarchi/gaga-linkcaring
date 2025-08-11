@@ -10,7 +10,7 @@ import React, {
 import { MilestoneVideo } from "@/lib/defs";
 import { createMilestoneVideo, deleteMilestoneVideo } from "@/db/queries/milestone-videos-queries";
 import { toast } from "sonner";
-import { uploadVideo, removeVideoFromR2 } from "@/lib/actions";
+import { createPresignedUpload, removeVideoFromR2 } from "@/lib/actions";
 
 type MilestoneVideosContextType = {
   milestoneVideos: MilestoneVideo[];
@@ -37,7 +37,24 @@ export function MilestoneVideosProvider({
 
   const addMilestoneVideo = async ({milestoneId, achievedMilestone, videoFile, videoName}: {milestoneId: number, achievedMilestone: string, videoFile: File, videoName: string}) => {
     try {
-        const videoPath = await uploadVideo(videoFile, videoName);
+        const ext = videoFile.name.split(".").pop() || "mp4";
+        const { url, key } = await createPresignedUpload({
+          baseName: videoName,
+          extension: ext,
+          contentType: videoFile.type || "video/mp4",
+        });
+
+        const putRes = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": videoFile.type || "video/mp4",
+          },
+          body: videoFile,
+        });
+        if (!putRes.ok) {
+          throw new Error(`Upload failed with status ${putRes.status}`);
+        }
+        const videoPath = key;
         const newMilestoneVideoId = await createMilestoneVideo({
           milestoneId,
           achievedMilestone,
@@ -55,8 +72,8 @@ export function MilestoneVideosProvider({
         setMilestoneVideos((prev) => [...prev, milestoneVideo]);
         toast.success("Milestone video added successfully");
     } catch (error) {
+      console.error("Error adding milestone video:", error);
       toast.error("Error adding milestone video");
-      throw error;
     }
   }
 
