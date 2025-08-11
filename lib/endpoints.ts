@@ -65,7 +65,7 @@ export async function analyzeMilestoneVideo(params: {
     // Important to opt-out of caching for actions
     cache: "no-store",
   });
-
+  console.log("response from analyze", res);
   let data: any = null;
   try {
     data = await res.json();

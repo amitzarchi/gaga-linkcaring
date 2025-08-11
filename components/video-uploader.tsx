@@ -9,7 +9,7 @@ interface VideoUploaderProps {
 }
 
 export default function VideoUploader({ onFileChange }: VideoUploaderProps) {
-  const maxSizeMB = 30
+  const maxSizeMB = 50
   const maxSize = maxSizeMB * 1024 * 1024 // 5MB default
 
   const [
