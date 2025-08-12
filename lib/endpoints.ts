@@ -54,8 +54,8 @@ export async function analyzeMilestoneVideo(params: {
   const hdrs = await headers();
   const host = hdrs.get("host");
   const proto = hdrs.get("x-forwarded-proto") || (host?.startsWith("localhost") ? "http" : "https");
-  const baseUrl = host ? `${proto}://${host}` : "http://localhost:3000";
-
+  // const baseUrl = host ? `${proto}://${host}` : "http://localhost:3000";
+  const baseUrl = "https://gaga-bhakaxe8dtcqgnhh.eastus-01.azurewebsites.net";
   const res = await fetch(`${baseUrl}/api/analyze`, {
     method: "POST",
     headers: {
