@@ -25,6 +25,8 @@ import { getCurrentSystemPrompt } from "@/db/queries/system-prompt-queries";
 import { SystemPromptProvider } from "../context/system-prompt-context";
 import { getModels } from "@/db/queries/models-queries";
 import { ModelsProvider } from "../context/models-context";
+import { getLatestResponseStats } from "@/db/queries/response-stats-queries";
+import { ResponseStatsProvider } from "../context/response-stats-context";
 
 export default async function DashboardLayout({
   children,
@@ -48,6 +50,7 @@ export default async function DashboardLayout({
     policies,
     systemPrompt,
     models,
+    responseStats,
   ] = await Promise.all([
     getMilestones(),
     getValidators(),
@@ -58,6 +61,7 @@ export default async function DashboardLayout({
     getPolicies(),
     getCurrentSystemPrompt(),
     getModels(),
+    getLatestResponseStats(1000),
   ]);
 
   return (
@@ -70,6 +74,7 @@ export default async function DashboardLayout({
               <TestResultsProvider testResultsData={testResults}>
                 <SystemPromptProvider initialCurrent={systemPrompt as any}>
                 <ModelsProvider modelsData={models as any}>
+                <ResponseStatsProvider responseStatsData={responseStats as any}>
                 <SidebarProvider>
                   <AppSidebar />
                   <SidebarInset>
@@ -85,6 +90,7 @@ export default async function DashboardLayout({
                     </div>
                   </SidebarInset>
                 </SidebarProvider>
+                </ResponseStatsProvider>
                 </ModelsProvider>
                 </SystemPromptProvider>
               </TestResultsProvider>
