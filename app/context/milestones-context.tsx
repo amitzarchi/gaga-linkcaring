@@ -8,12 +8,24 @@ import React, {
   useEffect,
 } from "react";
 import { Milestone } from "@/lib/defs";
+import { toast } from "sonner";
+import {
+  createMilestone as createMilestoneServer,
+  updateMilestone as updateMilestoneServer,
+  deleteMilestone as deleteMilestoneServer,
+} from "@/db/queries/milestones-queries";
 
 type MilestonesContextType = {
   milestones: Milestone[];
   setMilestones: (milestones: Milestone[]) => void;
   selectedMilestone: Milestone | null;
   setSelectedMilestone: (milestone: Milestone | null) => void;
+  addMilestone: (data: { name: string; category: Milestone["category"] }) => Promise<void>;
+  removeMilestone: (id: number) => Promise<void>;
+  editMilestone: (
+    id: number,
+    updates: Partial<Pick<Milestone, "name" | "category">>
+  ) => Promise<void>;
 };
 
 const MilestonesContext = createContext<MilestonesContextType | undefined>(
@@ -76,6 +88,67 @@ export function MilestonesProvider({
     }
   };
 
+  const addMilestone: MilestonesContextType["addMilestone"] = async (data) => {
+    try {
+      const created = await createMilestoneServer({ name: data.name, category: data.category });
+      setMilestones((curr) => [
+        ...curr,
+        {
+          id: created.id,
+          name: created.name,
+          category: created.category,
+          policyId: created.policyId ?? null,
+          ageStatuses: new Map(),
+        },
+      ]);
+      toast.success("Milestone added");
+    } catch (error) {
+      toast.error("Failed to add milestone");
+    }
+  };
+
+  const removeMilestone: MilestonesContextType["removeMilestone"] = async (id) => {
+    const previousMilestones = milestones;
+    const previousSelected = selectedMilestone;
+    const nextMilestones = milestones.filter((m) => m.id !== id);
+    setMilestones(nextMilestones);
+    if (selectedMilestone?.id === id) {
+      setSelectedMilestone(nextMilestones[0] ?? null);
+    }
+    try {
+      await deleteMilestoneServer(id);
+      toast.success("Milestone removed");
+    } catch (error) {
+      toast.error("Failed to remove milestone");
+      setMilestones(previousMilestones);
+      setSelectedMilestone(previousSelected ?? null);
+    }
+  };
+
+  const editMilestone: MilestonesContextType["editMilestone"] = async (id, updates) => {
+    const previousMilestones = milestones;
+    const previousSelected = selectedMilestone;
+    setMilestones(
+      milestones.map((m) =>
+        m.id === id ? { ...m, ...updates } : m
+      )
+    );
+    if (selectedMilestone?.id === id) {
+      setSelectedMilestone({ ...selectedMilestone, ...updates });
+    }
+    try {
+      await updateMilestoneServer(id, {
+        name: updates.name,
+        category: updates.category,
+      });
+      toast.success("Milestone updated");
+    } catch (error) {
+      toast.error("Failed to update milestone");
+      setMilestones(previousMilestones);
+      setSelectedMilestone(previousSelected ?? null);
+    }
+  };
+
   return (
     <MilestonesContext.Provider
       value={{
@@ -83,6 +156,9 @@ export function MilestonesProvider({
         setMilestones,
         selectedMilestone,
         setSelectedMilestone,
+        addMilestone,
+        removeMilestone,
+        editMilestone,
       }}
     >
       {children}

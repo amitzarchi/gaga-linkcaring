@@ -32,6 +32,7 @@ import {
   Shield,
   FileText,
   Sparkles,
+  Milestone,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -40,9 +41,14 @@ import Link from "next/link";
 
 const workspaceItems = [
   {
-    title: "Milestones & Validators",
+    title: "Milestones",
+    icon: Milestone,
+    url: "/dashboard/milestones",
+  },
+  {
+    title: "Validators",
     icon: ListChecks,
-    url: "/dashboard",
+    url: "/dashboard/validators",
   },
   {
     title: "Policies",
@@ -50,14 +56,14 @@ const workspaceItems = [
     url: "/dashboard/policies",
   },
   {
-    title: "Test Runner",
-    icon: Play,
-    url: "/dashboard/test-runner",
-  },
-  {
     title: "System Prompt",
     icon: FileText,
     url: "/dashboard/system-prompt",
+  },
+  {
+    title: "Test Runner",
+    icon: Play,
+    url: "/dashboard/test-runner",
   },
   {
     title: "Models",

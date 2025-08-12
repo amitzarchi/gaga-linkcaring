@@ -12,7 +12,7 @@ import {
 } from "@/db/schema";
 import { and, asc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { Milestone } from "@/lib/defs";  
+import { Milestone, MilestoneInsert } from "@/lib/defs";
 
 // MILESTONE CRUD OPERATIONS
 
@@ -56,10 +56,9 @@ export async function getMilestones(): Promise<Milestone[]> {
   }));
 }
 
-
-
-
-export async function getMilestoneById(id: number): Promise<{ name: string, policyId: number | null } | null> {
+export async function getMilestoneById(
+  id: number
+): Promise<{ name: string; policyId: number | null } | null> {
   const [row] = await db
     .select({ name: milestones.name, policyId: milestones.policyId })
     .from(milestones)
@@ -68,18 +67,14 @@ export async function getMilestoneById(id: number): Promise<{ name: string, poli
   return row;
 }
 
-export async function createMilestone(data: {
-  id: number;
-  name: string;
-  category: typeof milestoneCategories.enumValues[number];
-}) {
+export async function createMilestone(milestone: MilestoneInsert) {
   const session = await auth.api.getSession({
-    headers: await headers()
-  })
+    headers: await headers(),
+  });
   if (!session?.user?.id) {
-    redirect("/")
+    redirect("/");
   }
-  const result = await db.insert(milestones).values(data).returning();
+  const result = await db.insert(milestones).values(milestone).returning();
   return result[0];
 }
 
@@ -87,14 +82,14 @@ export async function updateMilestone(
   id: number,
   data: Partial<{
     name: string;
-    category: typeof milestoneCategories.enumValues[number];
+    category: (typeof milestoneCategories.enumValues)[number];
   }>
 ) {
   const session = await auth.api.getSession({
-    headers: await headers()
-  })
+    headers: await headers(),
+  });
   if (!session?.user?.id) {
-    redirect("/")
+    redirect("/");
   }
   const result = await db
     .update(milestones)
@@ -106,12 +101,12 @@ export async function updateMilestone(
 
 export async function deleteMilestone(id: number) {
   const session = await auth.api.getSession({
-    headers: await headers()
-  })
+    headers: await headers(),
+  });
   if (!session?.user?.id) {
-    redirect("/")
+    redirect("/");
   }
-  
+
   // Then delete the milestone
   const result = await db
     .delete(milestones)
@@ -120,11 +115,10 @@ export async function deleteMilestone(id: number) {
   return result[0];
 }
 
-
 export async function createMilestoneAgeStatus(data: {
   milestoneId: number;
   month: number;
-  achievementRate: typeof milestoneAchievementRates.enumValues[number];
+  achievementRate: (typeof milestoneAchievementRates.enumValues)[number];
 }) {
   const result = await db.insert(milestoneAgeStatuses).values(data).returning();
   return result[0];
@@ -134,9 +128,9 @@ export async function updateMilestoneAgeStatus(
   milestoneId: number,
   month: number,
   data: Partial<{
-    achievementRate: typeof milestoneAchievementRates.enumValues[number];
+    achievementRate: (typeof milestoneAchievementRates.enumValues)[number];
   }>
-) { 
+) {
   const result = await db
     .update(milestoneAgeStatuses)
     .set(data)
@@ -164,4 +158,4 @@ export async function deleteMilestoneAgeStatus(
     )
     .returning();
   return result[0];
-} 
+}
