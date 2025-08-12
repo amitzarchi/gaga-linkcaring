@@ -33,7 +33,7 @@ export const policies = pgTable("policies", {
 });
 
 export const milestones = pgTable("milestones", {
-  id: integer("id").primaryKey(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   name: text("name").notNull(),
   category: milestoneCategories("category").notNull(), // e.g., 'SOCIAL', 'LANGUAGE', 'FINE_MOTOR', 'GROSS_MOTOR'
   policyId: integer("policy_id").references(() => policies.id, {
