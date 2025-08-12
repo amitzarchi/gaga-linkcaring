@@ -6,8 +6,10 @@ import {
   text,
   timestamp,
   boolean,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
+import { sql } from "drizzle-orm";
 
 export const milestoneCategories = pgEnum("milestone_categories", [
   "SOCIAL",
@@ -33,7 +35,9 @@ export const milestones = pgTable("milestones", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
   category: milestoneCategories("category").notNull(), // e.g., 'SOCIAL', 'LANGUAGE', 'FINE_MOTOR', 'GROSS_MOTOR'
-  policyId: integer("policy_id").references(() => policies.id, { onDelete: "set null" }),
+  policyId: integer("policy_id").references(() => policies.id, {
+    onDelete: "set null",
+  }),
 });
 
 export const validators = pgTable("validators", {
@@ -79,7 +83,9 @@ export const milestoneVideos = pgTable("milestone_videos", {
 export const apiKeys = pgTable("api_keys", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   key: text("key").notNull(),
-  userId: text("user_id").references(() => user.id).notNull(),
+  userId: text("user_id")
+    .references(() => user.id)
+    .notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastUsedAt: timestamp("last_used_at"),
@@ -109,3 +115,20 @@ export const systemPromptHistory = pgTable("system_prompt_history", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   createdBy: text("created_by").references(() => user.id),
 });
+
+// Models table - stores available inference models, with exactly one active at a time
+export const models = pgTable(
+  "models",
+  {
+    name: text("name").notNull(),
+    model: text("model").primaryKey(),
+    isActive: boolean("is_active").notNull().default(false),
+    logoUrl: text("logo_url"),
+    description: text("description"),
+  },
+  (table) => [
+    uniqueIndex("only_one_active_model")
+      .on(table.isActive)
+      .where(sql`${table.isActive} = true`),
+  ]
+);

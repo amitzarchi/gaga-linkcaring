@@ -1,6 +1,7 @@
 import { seedMilestoneAgeStatuses } from "./seed-milestone-age-statuses";
 import { seedMilestones } from "./seed-milestones";
 import { seedPolicies } from "./policies";
+import { seedModels } from "./models";
 
 async function runAllSeeds() {
   try {
@@ -10,6 +11,7 @@ async function runAllSeeds() {
     await seedMilestones();
     await seedMilestoneAgeStatuses();
     await seedPolicies();
+    await seedModels();
     
     // Add other seed functions here when you create them
     // await seedMilestoneAgeStatuses();

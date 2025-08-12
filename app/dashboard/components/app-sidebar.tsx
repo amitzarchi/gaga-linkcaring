@@ -31,6 +31,7 @@ import {
   ListChecks,
   Shield,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -57,6 +58,11 @@ const workspaceItems = [
     title: "System Prompt",
     icon: FileText,
     url: "/dashboard/system-prompt",
+  },
+  {
+    title: "Models",
+    icon: Sparkles,
+    url: "/dashboard/models",
   },
 ];
 

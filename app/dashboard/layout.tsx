@@ -23,6 +23,8 @@ import { getApiKeys } from "@/db/queries/api-keys-queries";
 import { getPolicies } from "@/db/queries/policies-queries";
 import { getCurrentSystemPrompt } from "@/db/queries/system-prompt-queries";
 import { SystemPromptProvider } from "../context/system-prompt-context";
+import { getModels } from "@/db/queries/models-queries";
+import { ModelsProvider } from "../context/models-context";
 
 export default async function DashboardLayout({
   children,
@@ -45,6 +47,7 @@ export default async function DashboardLayout({
     apiKeys,
     policies,
     systemPrompt,
+    models,
   ] = await Promise.all([
     getMilestones(),
     getValidators(),
@@ -54,6 +57,7 @@ export default async function DashboardLayout({
     getApiKeys(),
     getPolicies(),
     getCurrentSystemPrompt(),
+    getModels(),
   ]);
 
   return (
@@ -65,6 +69,7 @@ export default async function DashboardLayout({
             <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
               <TestResultsProvider testResultsData={testResults}>
                 <SystemPromptProvider initialCurrent={systemPrompt as any}>
+                <ModelsProvider modelsData={models as any}>
                 <SidebarProvider>
                   <AppSidebar />
                   <SidebarInset>
@@ -80,6 +85,7 @@ export default async function DashboardLayout({
                     </div>
                   </SidebarInset>
                 </SidebarProvider>
+                </ModelsProvider>
                 </SystemPromptProvider>
               </TestResultsProvider>
             </MilestoneVideosProvider>

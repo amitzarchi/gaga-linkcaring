@@ -1,4 +1,4 @@
-import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults, policies } from "@/db/schema";
+import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults, policies, models } from "@/db/schema";
 import { accessRequest } from "@/db/auth-schema";
 
 export type Milestone = {
@@ -54,3 +54,6 @@ export type TestResultInsert = typeof testResults.$inferInsert;
 
 export type Policy = typeof policies.$inferSelect;
 export type PolicyInsert = typeof policies.$inferInsert;
+
+export type Model = typeof models.$inferSelect;
+export type ModelInsert = typeof models.$inferInsert;

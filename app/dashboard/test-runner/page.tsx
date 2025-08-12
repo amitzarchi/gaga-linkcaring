@@ -206,9 +206,9 @@ export default function TestRunnerPage() {
       }
 
       if (testResult.success) {
-        toast.success(`Test passed for ${video.videoPath}`);
+        toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
       } else {
-        toast.error(`Test failed for ${video.videoPath}`);
+        toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
       }
     } catch (error) {
       const testResult: TestResult = {
@@ -242,7 +242,7 @@ export default function TestRunnerPage() {
         console.error("Failed to save test result to database:", dbError);
       }
 
-      toast.error(`API error for ${video.videoPath}`);
+      toast.error(`API error for ${video.videoPath.split("_")[0]}`);
     }
   };
 
