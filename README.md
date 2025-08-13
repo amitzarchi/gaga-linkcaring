@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### Gaga X LinkCaring
 
-## Getting Started
+Admin dashboard for the Gaga X LinkCaring API.
 
-First, run the development server:
+## Quick Start (with Bun)
 
+### Prerequisites
+- Bun installed (`curl -fsSL https://bun.sh/install | bash`)
+- PostgreSQL database (Neon recommended)
+- Google OAuth 2.0 credentials
+- Cloudflare R2 bucket and API keys (for video storage)
+
+### 1) Clone
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/<your-org>/gaga-linkcaring.git
+cd gaga-linkcaring
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2) Install deps
+```bash
+bun install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3) Configure environment
+Create a `.env.local` file in the project root:
+```bash
+cp .env.local.example .env.local # if you create one
+# or create it manually:
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Put the following variables in `.env.local`:
+```bash
+# Database (Neon Postgres recommended)
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DBNAME"
 
-## Learn More
+# Google OAuth
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
 
-To learn more about Next.js, take a look at the following resources:
+# Better Auth core
+# Base URL of your app (include protocol); use your deployed URL in production
+BETTER_AUTH_URL="http://localhost:3000"
+# Secret for signing/encryption (generate with: openssl rand -base64 32)
+BETTER_AUTH_SECRET="replace-with-a-secure-random-string"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# External analyze API
+GAGA_API_URL="https://api.gaga.care"
+GAGA_API_KEY="your-secret-api-key"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Cloudflare R2 (S3-compatible) for file storage
+R2_ENDPOINT="https://<accountid>.r2.cloudflarestorage.com"
+R2_ACCESS_KEY_ID="..."
+R2_SECRET_ACCESS_KEY="..."
+R2_BUCKET_NAME="your-bucket-name"
+```
 
-## Deploy on Vercel
+### 4) Initialize the database (Drizzle)
+Push the schema to your database:
+```bash
+bunx drizzle-kit push
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 5) Seed data
+```bash
+bun run seed
+# optional, granular seeds
+bun run seed:milestones
+bun run seed:milestone-age-statuses
+bun run seed:validators
+bun run seed:systemprompt
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 6) Run the app
+```bash
+bun run dev
+```
+Open http://localhost:3000
+
+### 7) Production build
+```bash
+bun run build
+bun run start
+```
+
+## Notes
+- Sign-in uses Google OAuth and access can be restricted to approved emails via the `access_requests` table. Use the Request Access flow in-app or pre-populate approvals as needed.
+- Video uploads use Cloudflare R2. Ensure the R2 credentials and bucket exist and are correct.
