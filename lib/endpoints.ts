@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { getFileFromR2 } from "@/lib/actions";
+import { AnalyzeResult, AnalyzeSuccessBody } from "./defs";
 
 function inferMimeType(filename: string, fallback?: string): string {
   const ext = (filename.split(".").pop() || "").toLowerCase();
@@ -24,7 +25,7 @@ function inferMimeType(filename: string, fallback?: string): string {
 export async function analyzeMilestoneVideo(params: {
   videoPath: string;
   milestoneId: number;
-}) {
+}): Promise<AnalyzeResult> {
   const { videoPath, milestoneId } = params;
 
   const apiKey = process.env.GAGA_API_KEY;
@@ -50,33 +51,21 @@ export async function analyzeMilestoneVideo(params: {
   formData.append("video", blob, filename);
   formData.append("milestoneId", String(milestoneId));
 
-  // Build absolute base URL from current request context
-  const hdrs = await headers();
-  const host = hdrs.get("host");
-  const proto = hdrs.get("x-forwarded-proto") || (host?.startsWith("localhost") ? "http" : "https");
-  // const baseUrl = host ? `${proto}://${host}` : "http://localhost:3000";
-  const baseUrl = "https://gaga-bhakaxe8dtcqgnhh.eastus-01.azurewebsites.net";
-  const res = await fetch(`${baseUrl}/api/analyze`, {
+  const baseUrl = process.env.GAGA_API_URL;
+  const res: Response = await fetch(`${baseUrl}/api/analyze`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
     },
     body: formData,
-    // Important to opt-out of caching for actions
     cache: "no-store",
   });
   console.log("response from analyze", res);
-  let data: any = null;
   try {
-    data = await res.json();
+    return await res.json() as AnalyzeResult;
   } catch {
-    data = { error: "Invalid response" };
+    return { error: "Internal server error" };  
   }
-
-  if (!res.ok) {
-    return { error: data?.error || "Internal server error" };
-  }
-  return data;
 }
 
 
