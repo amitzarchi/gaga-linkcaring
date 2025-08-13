@@ -5,7 +5,7 @@ import { analyzeMilestoneVideo } from "@/lib/endpoints";
 import { useMilestones } from "../../context/milestones-context";
 import { useMilestoneVideos } from "../../context/milestone-videos-context";
 import { useTestResults } from "../../context/test-results-context";
-import { MilestoneVideo } from "@/lib/defs";
+import { AnalyzeResult, MilestoneVideo } from "@/lib/defs";
 
 import Lottie from "lottie-react";
 import forwardIconAnimation from "@/public/forwardIcon.json";
@@ -58,7 +58,7 @@ import { VideoHistoryModal, MilestoneHistoryModal } from "@/components/test-hist
 interface TestResult {
   success: boolean;
   result: boolean;
-  confidence?: number;
+  confidence: number;
   error?: string;
 }
 
@@ -168,16 +168,41 @@ export default function TestRunnerPage() {
     );
 
     try {
-      const data = await analyzeMilestoneVideo({
+      const data: AnalyzeResult = await analyzeMilestoneVideo({
         videoPath: video.videoPath,
         milestoneId: selectedMilestone.id,
       });
 
+      // Handle error-shaped result
+      if ("error" in data) {
+        const testResult: TestResult = {
+          success: false,
+          result: false,
+          confidence: 0,
+          error: data.error,
+        };
+
+        setVideoResults(
+          (prev) =>
+            new Map(
+              prev.set(video.id, {
+                ...video,
+                testResult,
+                isRunning: false,
+              })
+            )
+        );
+
+        // Do not persist unsuccessful responses
+        toast.error(`API error for ${video.videoPath.split("_")[0]}`);
+        return;
+      }
+
+      // Success-shaped result
       const testResult: TestResult = {
         success: data.result === (video.achievedMilestone === "true"),
         result: data.result,
         confidence: data.confidence,
-        error: data.error,
       };
 
       setVideoResults(
@@ -190,22 +215,24 @@ export default function TestRunnerPage() {
             })
           )
       );
-      console.log("testResult", testResult);
-      // Save test result to database
-      try {
-        await addTestResult({
-          milestoneId: selectedMilestone.id,
-          videoId: video.id,
-          success: testResult.success,
-          result: testResult.result,
-          confidence: testResult.confidence ? Math.round(testResult.confidence * 100) : null,
-          error: testResult.error || null,
-        });
-      } catch (dbError) {
-        console.error("Failed to save test result to database:", dbError);
-      }
 
+      // Only persist successful test runs
       if (testResult.success) {
+        try {
+          await addTestResult({
+            milestoneId: selectedMilestone.id,
+            videoId: video.id,
+            success: true,
+            result: testResult.result,
+            confidence:
+              typeof testResult.confidence === "number"
+                ? Math.round(testResult.confidence * 100)
+                : null,
+            error: null,
+          });
+        } catch (dbError) {
+          console.error("Failed to save test result to database:", dbError);
+        }
         toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
       } else {
         toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
@@ -214,6 +241,7 @@ export default function TestRunnerPage() {
       const testResult: TestResult = {
         success: false,
         result: false,
+        confidence: 0,
         error: error instanceof Error ? error.message : "Unknown error",
       };
 
@@ -228,20 +256,7 @@ export default function TestRunnerPage() {
           )
       );
 
-      // Save error result to database
-      try {
-        await addTestResult({
-          milestoneId: selectedMilestone.id,
-          videoId: video.id,
-          success: testResult.success,
-          result: testResult.result,
-          confidence: null,
-          error: testResult.error || null,
-        });
-      } catch (dbError) {
-        console.error("Failed to save test result to database:", dbError);
-      }
-
+      // Do not persist unsuccessful responses
       toast.error(`API error for ${video.videoPath.split("_")[0]}`);
     }
   };

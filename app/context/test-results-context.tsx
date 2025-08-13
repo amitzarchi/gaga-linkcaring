@@ -27,7 +27,7 @@ export type TestResultWithDetails = {
 type TestResultsContextType = {
   testResults: TestResultWithDetails[];
   setTestResults: (testResults: TestResultWithDetails[]) => void;
-  addTestResult: (testResult: TestResultInsert) => Promise<number>;
+  addTestResult: (testResult: TestResultInsert) => Promise<number | null>;
   removeTestResult: (id: number) => Promise<void>;
   removeTestResultsByVideo: (videoId: number) => Promise<void>;
   getTestResultsByMilestone: (milestoneId: number) => TestResultWithDetails[];
@@ -52,9 +52,14 @@ export function TestResultsProvider({
     setTestResults(testResultsData);
   }, [testResultsData]);
 
-  const addTestResult = async (testResult: TestResultInsert): Promise<number> => {
+  const addTestResult = async (testResult: TestResultInsert): Promise<number | null> => {
     const newId = await createTestResult(testResult);
-    
+
+    // If server chose not to persist (unsuccessful), do not update local state
+    if (newId === null) {
+      return null;
+    }
+
     // Create a new test result object with details for immediate UI update
     const newTestResult: TestResultWithDetails = {
       id: newId,
@@ -65,11 +70,11 @@ export function TestResultsProvider({
       confidence: testResult.confidence || null,
       error: testResult.error || null,
       createdAt: new Date(),
-      milestoneName: null, // Will be populated on next fetch
-      videoPath: null, // Will be populated on next fetch
-      achievedMilestone: null, // Will be populated on next fetch
+      milestoneName: null,
+      videoPath: null,
+      achievedMilestone: null,
     };
-    
+
     setTestResults((prev) => [newTestResult, ...prev]);
     return newId;
   };

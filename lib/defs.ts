@@ -1,19 +1,31 @@
-import { milestoneAchievementRates, milestoneCategories, validators, milestoneVideos, apiKeys, testResults, policies, models, milestones, responseStats } from "@/db/schema";
+import {
+  milestoneAchievementRates,
+  milestoneCategories,
+  validators,
+  milestoneVideos,
+  apiKeys,
+  testResults,
+  policies,
+  models,
+  milestones,
+  responseStats,
+} from "@/db/schema";
 import { accessRequest } from "@/db/auth-schema";
 
 export type Milestone = {
-    id: number;
-    name: string;
-    category: MilestoneCategory;
-    ageStatuses: Map<number, MilestoneAchievementRate>;
-    policyId: number | null;
-  }
+  id: number;
+  name: string;
+  category: MilestoneCategory;
+  ageStatuses: Map<number, MilestoneAchievementRate>;
+  policyId: number | null;
+};
 
 export type MilestoneInsert = typeof milestones.$inferInsert;
-  
+
 export type MilestoneCategory = (typeof milestoneCategories.enumValues)[number];
 
-export type MilestoneAchievementRate = (typeof milestoneAchievementRates.enumValues)[number];
+export type MilestoneAchievementRate =
+  (typeof milestoneAchievementRates.enumValues)[number];
 
 export type Validator = typeof validators.$inferSelect;
 export type ValidatorInsert = typeof validators.$inferInsert;
@@ -61,3 +73,22 @@ export type Model = typeof models.$inferSelect;
 export type ModelInsert = typeof models.$inferInsert;
 
 export type ResponseStat = typeof responseStats.$inferSelect;
+
+export type AnalyzeSuccessBody = {
+  milestoneId: number;
+  result: boolean;
+  confidence: number; // 0–1
+  validators: { description: string; result: boolean }[];
+  policy: {
+    minValidatorsPassed: number; // percent (0–100)
+    minConfidence: number; // percent (0–100)
+  };
+};
+
+export type AnalyzeErrorBody =
+  | { error: "Invalid or missing video file" } // 400
+  | { error: "Invalid or missing milestone ID" } // 400
+  | { error: "invalid milestone ID" } // 404 (milestone not found)
+  | { error: "Internal server error" }; // 500
+
+export type AnalyzeResult = AnalyzeSuccessBody | AnalyzeErrorBody;

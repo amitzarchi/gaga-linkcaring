@@ -79,7 +79,7 @@ export async function getTestResultsByVideo(videoId: number) {
   return result;
 }
 
-export async function createTestResult(data: TestResultInsert) {
+export async function createTestResult(data: TestResultInsert): Promise<number | null> {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -87,6 +87,11 @@ export async function createTestResult(data: TestResultInsert) {
     redirect("/")
   }
   
+  // Do not persist unsuccessful responses
+  if (!data.success) {
+    return null;
+  }
+
   const result = await db.insert(testResults).values(data).returning({id: testResults.id});
   return result[0].id;
 }
