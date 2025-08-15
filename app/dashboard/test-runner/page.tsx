@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { analyzeMilestoneVideo } from "@/lib/endpoints";
 import { useMilestones } from "../../context/milestones-context";
 import { useMilestoneVideos } from "../../context/milestone-videos-context";
@@ -54,6 +54,7 @@ import {
 import { IconWithBadge } from "@/components/icon-with-badge";
 import VideoUploader from "@/components/video-uploader";
 import { VideoHistoryModal, MilestoneHistoryModal } from "@/components/test-history";
+import { createPresignedGet } from "@/lib/actions";
 
 interface TestResult {
   success: boolean;
@@ -106,6 +107,8 @@ export default function TestRunnerPage() {
     ? milestoneVideos.filter((v) => v.milestoneId === selectedMilestone.id)
     : [];
 
+  const idsKey = filteredVideos.map((v) => `${v.id}:${v.videoPath}`).join("|");
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -113,6 +116,32 @@ export default function TestRunnerPage() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
+
+  const [videoUrls, setVideoUrls] = useState<Map<number, string>>(new Map());
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (filteredVideos.length === 0) {
+        setVideoUrls(new Map());
+        return;
+      }
+      try {
+        const entries = await Promise.all(
+          filteredVideos.map(async (v) => {
+            const { url } = await createPresignedGet({ key: v.videoPath, expiresIn: 3600 });
+            return [v.id, url] as const;
+          })
+        );
+        if (!cancelled) setVideoUrls(new Map(entries));
+      } catch (e) {
+        console.error("Failed to fetch presigned URLs", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [idsKey]);
 
   const handleFileChange = (file: File | null) => {
     setSelectedFile(file);
@@ -153,49 +182,50 @@ export default function TestRunnerPage() {
     }
   };
 
-  const runSingleTest = async (video: MilestoneVideo) => {
-    if (!selectedMilestone) return;
-
-    // Set loading state
-    setVideoResults(
-      (prev) =>
-        new Map(
-          prev.set(video.id, {
-            ...video,
-            isRunning: true,
-          })
-        )
-    );
+  // New function that returns results instead of updating state
+  const runSingleTestForResult = async (video: MilestoneVideo) => {
+    if (!selectedMilestone) {
+      return {
+        video,
+        testResult: {
+          success: false,
+          result: false,
+          confidence: 0,
+          error: "No milestone selected",
+        },
+      };
+    }
 
     try {
+      const url = videoUrls.get(video.id);
+      if (!url) {
+        return {
+          video,
+          testResult: {
+            success: false,
+            result: false,
+            confidence: 0,
+            error: "Video URL not ready yet, please try again.",
+          },
+        };
+      }
+
       const data: AnalyzeResult = await analyzeMilestoneVideo({
-        videoPath: video.videoPath,
+        videoUrl: url,
         milestoneId: selectedMilestone.id,
       });
 
       // Handle error-shaped result
       if ("error" in data) {
-        const testResult: TestResult = {
-          success: false,
-          result: false,
-          confidence: 0,
-          error: data.error,
+        return {
+          video,
+          testResult: {
+            success: false,
+            result: false,
+            confidence: 0,
+            error: data.error,
+          },
         };
-
-        setVideoResults(
-          (prev) =>
-            new Map(
-              prev.set(video.id, {
-                ...video,
-                testResult,
-                isRunning: false,
-              })
-            )
-        );
-
-        // Do not persist unsuccessful responses
-        toast.error(`API error for ${video.videoPath.split("_")[0]}`);
-        return;
       }
 
       // Success-shaped result
@@ -204,17 +234,6 @@ export default function TestRunnerPage() {
         result: data.result,
         confidence: data.confidence,
       };
-
-      setVideoResults(
-        (prev) =>
-          new Map(
-            prev.set(video.id, {
-              ...video,
-              testResult,
-              isRunning: false,
-            })
-          )
-      );
 
       // Only persist successful test runs
       if (testResult.success) {
@@ -233,31 +252,57 @@ export default function TestRunnerPage() {
         } catch (dbError) {
           console.error("Failed to save test result to database:", dbError);
         }
-        toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
-      } else {
-        toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
       }
+
+      return { video, testResult };
     } catch (error) {
-      const testResult: TestResult = {
-        success: false,
-        result: false,
-        confidence: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
+      return {
+        video,
+        testResult: {
+          success: false,
+          result: false,
+          confidence: 0,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       };
+    }
+  };
 
-      setVideoResults(
-        (prev) =>
-          new Map(
-            prev.set(video.id, {
-              ...video,
-              testResult,
-              isRunning: false,
-            })
-          )
-      );
+  const runSingleTest = async (video: MilestoneVideo) => {
+    if (!selectedMilestone) return;
 
-      // Do not persist unsuccessful responses
+    // Set loading state
+    setVideoResults(
+      (prev) =>
+        new Map(
+          prev.set(video.id, {
+            ...video,
+            isRunning: true,
+          })
+        )
+    );
+
+    const { testResult } = await runSingleTestForResult(video);
+
+    // Update state with result
+    setVideoResults(
+      (prev) =>
+        new Map(
+          prev.set(video.id, {
+            ...video,
+            testResult,
+            isRunning: false,
+          })
+        )
+    );
+
+    // Show toast notifications
+    if (testResult.error) {
       toast.error(`API error for ${video.videoPath.split("_")[0]}`);
+    } else if (testResult.success) {
+      toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
+    } else {
+      toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
     }
   };
 
@@ -274,14 +319,38 @@ export default function TestRunnerPage() {
     setVideoResults(loadingResults);
 
     try {
-      // Run tests for all videos in parallel
-      await Promise.all(filteredVideos.map((video) => runSingleTest(video)));
+      // Run tests for all videos in parallel and collect results
+      const results = await Promise.all(
+        filteredVideos.map((video) => runSingleTestForResult(video))
+      );
 
-      const passedTests = Array.from(videoResults.values()).filter(
-        (v) => v.testResult?.success
-      ).length;
+      // Update state with all results at once
+      const newResults = new Map();
+      results.forEach(({ video, testResult }) => {
+        newResults.set(video.id, {
+          ...video,
+          testResult,
+          isRunning: false,
+        });
+      });
+      setVideoResults(newResults);
+
+      // Count results from actual data
+      const passedTests = results.filter(({ testResult }) => testResult.success).length;
       const totalTests = filteredVideos.length;
 
+      // Show individual toast notifications
+      results.forEach(({ video, testResult }) => {
+        if (testResult.error) {
+          toast.error(`API error for ${video.videoPath.split("_")[0]}`);
+        } else if (testResult.success) {
+          toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
+        } else {
+          toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
+        }
+      });
+
+      // Show summary toast
       toast.success(
         `Bulk test completed: ${passedTests}/${totalTests} tests passed`
       );
@@ -564,7 +633,7 @@ export default function TestRunnerPage() {
                             <video
                               controls
                               className="w-full h-full object-contain"
-                              src={`/api/files/${video.videoPath}`}
+                              src={videoUrls.get(video.id) || undefined}
                             >
                               Your browser does not support video playback.
                             </video>
@@ -695,7 +764,7 @@ export default function TestRunnerPage() {
                           <div className="aspect-video bg-black rounded-lg overflow-hidden">
                             <video
                               className="w-full h-full object-contain pointer-events-none"
-                              src={`/api/files/${video.videoPath}`}
+                              src={videoUrls.get(video.id) || undefined}
                             >
                               Your browser does not support video playback.
                             </video>
@@ -781,7 +850,7 @@ export default function TestRunnerPage() {
                 <video
                   controls
                   className="w-full h-full object-contain"
-                  src={`/api/files/${selectedVideoForDrawer.videoPath}`}
+                  src={selectedVideoForDrawer ? (videoUrls.get(selectedVideoForDrawer.id) || undefined) : undefined}
                 >
                   Your browser does not support video playback.
                 </video>

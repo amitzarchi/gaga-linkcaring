@@ -111,6 +111,19 @@ export async function createPresignedUpload(params: {
   return { url, key: uniqueFileName };
 }
 
+export async function createPresignedGet(params: {
+  key: string;
+  expiresIn?: number;
+}): Promise<{ url: string }> {
+  const { key, expiresIn = 3600 } = params;
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+  });
+  const url = await getSignedUrl(s3Client, command, { expiresIn });
+  return { url };
+}
+
 export async function getFileFromR2(
   fileName: string
 ): Promise<{ buffer: Buffer; contentType: string }> {

@@ -1,70 +1,45 @@
 "use server";
 
-import { headers } from "next/headers";
-import { getFileFromR2 } from "@/lib/actions";
-import { AnalyzeResult, AnalyzeSuccessBody } from "./defs";
-
-function inferMimeType(filename: string, fallback?: string): string {
-  const ext = (filename.split(".").pop() || "").toLowerCase();
-  const map: Record<string, string> = {
-    mp4: "video/mp4",
-    mov: "video/quicktime",
-    webm: "video/webm",
-    mpeg: "video/mpeg",
-    mpg: "video/mpeg",
-    m4v: "video/mp4",
-    qt: "video/quicktime",
-    "3gp": "video/3gpp",
-    "3gpp": "video/3gpp",
-    "3g2": "video/3gpp2",
-    "3gpp2": "video/3gpp2",
-  };
-  return map[ext] || fallback || "video/mp4";
-}
+import { AnalyzeResult } from "./defs";
 
 export async function analyzeMilestoneVideo(params: {
-  videoPath: string;
+  videoUrl: string;
   milestoneId: number;
 }): Promise<AnalyzeResult> {
-  const { videoPath, milestoneId } = params;
+  const { videoUrl, milestoneId } = params;
 
   const apiKey = process.env.GAGA_API_KEY;
+  const baseUrl = process.env.GAGA_API_URL;
   if (!apiKey) {
     return { error: "Internal server error" };
   }
 
-  // Fetch file bytes directly from R2 (avoids client round-trip)
-  const startTime = performance.now();
-  console.log(`starting to get file from R2`);
-  const { buffer, contentType } = await getFileFromR2(videoPath);
-  const endTime = performance.now();
-  console.log(`Time taken to get file from R2: ${((endTime - startTime) / 1000).toFixed(2)}s`);
-  
-  const filename = videoPath.split("/").pop() || `video_${Date.now()}.mp4`;
-  const mimeType = contentType && contentType !== "application/octet-stream"
-    ? contentType
-    : inferMimeType(filename, contentType);
+  if (!baseUrl) {
+    return { error: "Internal server error" };
+  }
 
-  const byteArray = new Uint8Array(buffer);
-  const blob = new Blob([byteArray], { type: mimeType });
-  const formData = new FormData();
-  formData.append("video", blob, filename);
-  formData.append("milestoneId", String(milestoneId));
-
-  const baseUrl = process.env.GAGA_API_URL;
-  const res: Response = await fetch(`${baseUrl}/api/analyze`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
-    cache: "no-store",
-  });
-  console.log("response from analyze", res);
   try {
-    return await res.json() as AnalyzeResult;
+    const formData = new FormData();
+    formData.append('milestoneId', milestoneId.toString());
+    formData.append('videoUrl', videoUrl);
+    
+    const res: Response = await fetch(`${baseUrl}/api/analyze`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        // Remove Content-Type header - let the browser set it for form data
+      },
+      body: formData, // Send form data instead of JSON
+      cache: "no-store",
+    });
+    
+    try {
+      return (await res.json()) as AnalyzeResult;
+    } catch {
+      return { error: "Internal server error" };
+    }
   } catch {
-    return { error: "Internal server error" };  
+    return { error: "Internal server error" };
   }
 }
 
