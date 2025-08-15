@@ -25,7 +25,7 @@ import { getCurrentSystemPrompt } from "@/db/queries/system-prompt-queries";
 import { SystemPromptProvider } from "../context/system-prompt-context";
 import { getModels } from "@/db/queries/models-queries";
 import { ModelsProvider } from "../context/models-context";
-import { getLatestResponseStats } from "@/db/queries/response-stats-queries";
+import { getLatestResponseStats, getResponseStatsCount } from "@/db/queries/response-stats-queries";
 import { ResponseStatsProvider } from "../context/response-stats-context";
 
 export default async function DashboardLayout({
@@ -51,6 +51,7 @@ export default async function DashboardLayout({
     systemPrompt,
     models,
     responseStats,
+    responseStatsCount,
   ] = await Promise.all([
     getMilestones(),
     getValidators(),
@@ -62,6 +63,7 @@ export default async function DashboardLayout({
     getCurrentSystemPrompt(),
     getModels(),
     getLatestResponseStats(1000),
+    getResponseStatsCount()
   ]);
 
   return (
@@ -74,16 +76,16 @@ export default async function DashboardLayout({
               <TestResultsProvider testResultsData={testResults}>
                 <SystemPromptProvider initialCurrent={systemPrompt as any}>
                 <ModelsProvider modelsData={models as any}>
-                <ResponseStatsProvider responseStatsData={responseStats as any}>
+                <ResponseStatsProvider responseStatsData={responseStats as any} responseStatsCountData={responseStatsCount}>
                 <SidebarProvider>
                   <AppSidebar />
-                  <SidebarInset>
+                  <SidebarInset className="md:peer-data-[variant=inset]:rounded-xl  md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-sidebar-border">
                     <div className="flex flex-1 flex-col w-full">
                       <header className="flex h-16 md:h-2 shrink-0 items-center gap-2 px-4">
                         <SidebarTrigger className="-ml-1 md:hidden" />
                       </header>
                       <div className="flex flex-1 justify-center w-full">
-                        <div className="flex flex-1 flex-col gap-4 p-4 max-w-4xl md:px-6">
+                        <div className="flex flex-1 flex-col gap-4 p-4 max-w-4xl md:px-6 ">
                           {children}
                         </div>
                       </div>

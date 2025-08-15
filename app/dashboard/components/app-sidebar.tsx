@@ -14,16 +14,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useAccessRequests } from "@/app/context/access-requests-context";
 import {
-  CheckSquare,
   Play,
   Key,
   Users,
@@ -33,8 +26,10 @@ import {
   FileText,
   Sparkles,
   Milestone,
+  Home,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 // Bagel Fat One font is now provided globally via `app/layout.tsx` as CSS var `--font-gaga`
@@ -88,6 +83,7 @@ const serviceItems = [
 export function AppSidebar() {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const { accessRequests } = useAccessRequests();
 
   // Calculate pending requests count
@@ -106,7 +102,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="p-4">
         <div className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
           <span className="[font-family:var(--font-gaga)] font-normal text-2xl">
@@ -119,6 +115,18 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === "/dashboard"}
+              className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
+            >
+              <Link href="/dashboard" className="flex items-center gap-4 py-5">
+                <Home className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[15deg]" />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarGroupLabel>WORKSPACE</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -126,7 +134,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title} className="">
                   <SidebarMenuButton
                     asChild
-                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50"
+                    isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
                   >
                     <Link
                       href={item.url}
@@ -150,7 +159,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50"
+                    isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
                   >
                     <Link
                       href={item.url}
