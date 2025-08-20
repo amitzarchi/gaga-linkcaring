@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,79 +153,82 @@ export default function MilestonesPage() {
       </div>
 
       <section className="space-y-2">
-        <Table className="w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Milestone</TableHead>
-              <TableHead>Id</TableHead>
-              <TableHead className="w-[220px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {milestones.map((m) => {
-              const isEditing = editingId === m.id;
-              return (
-                <TableRow key={m.id}>
-                  <TableCell>
-                    {isEditing ? (
-                      <div className="flex items-center gap-3 min-w-0">
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="max-w-[340px]"
-                        />
-                        <Select
-                          value={editCategory}
-                          onValueChange={(v) => setEditCategory(v as MilestoneCategory)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CATEGORY_OPTIONS.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                {formatCategoryName(cat)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="truncate">{m.name}</span>
-                        <Badge className={getCategoryBadgeStyles(m.category)}>
-                          {formatCategoryName(m.category)}
-                        </Badge>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{m.id}</TableCell>
-                  <TableCell className="space-x-2">
-                    {isEditing ? (
-                      <>
-                        <Button size="sm" onClick={saveEdit} disabled={saving}>
-                          Save
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={cancelEdit} disabled={saving}>
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button size="sm" variant="outline" onClick={() => startEdit(m.id)}>
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => setDeleteId(m.id)}>
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <ScrollArea type="auto" className="w-full grid grid-cols-1">
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Milestone</TableHead>
+                <TableHead>Id</TableHead>
+                <TableHead className="w-[220px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {milestones.map((m) => {
+                const isEditing = editingId === m.id;
+                return (
+                  <TableRow key={m.id}>
+                    <TableCell>
+                      {isEditing ? (
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="max-w-[340px]"
+                          />
+                          <Select
+                            value={editCategory}
+                            onValueChange={(v) => setEditCategory(v as MilestoneCategory)}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CATEGORY_OPTIONS.map((cat) => (
+                                <SelectItem key={cat} value={cat}>
+                                  {formatCategoryName(cat)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{m.name}</span>
+                          <Badge className={getCategoryBadgeStyles(m.category)}>
+                            {formatCategoryName(m.category)}
+                          </Badge>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{m.id}</TableCell>
+                    <TableCell className="space-x-2">
+                      {isEditing ? (
+                        <>
+                          <Button size="sm" onClick={saveEdit} disabled={saving}>
+                            Save
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelEdit} disabled={saving}>
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => startEdit(m.id)}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => setDeleteId(m.id)}>
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </section>
 
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
