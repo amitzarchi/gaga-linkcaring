@@ -17,7 +17,7 @@ import { APIError } from "better-auth/api";
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
-  const { data } = useSession();
+  const { data, isPending } = useSession();
   if (data?.user) {
     redirect("/dashboard");
   }
@@ -49,7 +49,7 @@ export default function SignIn() {
               <Button
                 variant="outline"
                 className={cn("w-full gap-2")}
-                disabled={loading}
+                disabled={loading || isPending}
                 onClick={async () => {
                   setLoading(true);
                   await signIn.social({
@@ -59,7 +59,7 @@ export default function SignIn() {
                   });
                 }}
               >
-                {loading ? (
+                {loading || isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <svg
