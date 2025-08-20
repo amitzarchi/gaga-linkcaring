@@ -103,16 +103,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 pb-2">
         <div className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
           <span className="[font-family:var(--font-gaga)] font-normal text-2xl">
             gaga{" "}
           </span>
           <span className="text-2xl font-medium">X </span>
-          <span className="font-inter font-bold">LinkCaring </span>
+          <span className="font-inter font-bold">LinkCaring</span>
         </div>
       </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenuItem>
@@ -127,11 +126,14 @@ export function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>WORKSPACE</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {workspaceItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="">
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
