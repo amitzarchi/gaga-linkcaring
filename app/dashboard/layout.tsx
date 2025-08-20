@@ -67,40 +67,42 @@ export default async function DashboardLayout({
   ]);
 
   return (
-    <ApiKeysProvider apiKeysData={apiKeys}>
-      <AccessRequestsProvider accessRequestsData={accessRequests}>
-        <MilestonesProvider milestonesData={milestones}>
-          <PoliciesProvider policiesData={policies}>
-          <ValidatorsProvider validatorsData={validators}>
-            <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
-              <TestResultsProvider testResultsData={testResults}>
-                <SystemPromptProvider initialCurrent={systemPrompt as any}>
-                <ModelsProvider modelsData={models as any}>
-                <ResponseStatsProvider responseStatsData={responseStats as any} responseStatsCountData={responseStatsCount}>
-                <SidebarProvider>
-                  <AppSidebar />
-                  <SidebarInset className="md:peer-data-[variant=inset]:rounded-xl  md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-sidebar-border">
-                    <div className="flex flex-1 flex-col w-full">
+    <div className="h-screen overflow-hidden">
+      <ApiKeysProvider apiKeysData={apiKeys}>
+        <AccessRequestsProvider accessRequestsData={accessRequests}>
+          <MilestonesProvider milestonesData={milestones}>
+            <PoliciesProvider policiesData={policies}>
+            <ValidatorsProvider validatorsData={validators}>
+              <MilestoneVideosProvider milestoneVideosData={milestoneVideos}>
+                <TestResultsProvider testResultsData={testResults}>
+                  <SystemPromptProvider initialCurrent={systemPrompt as any}>
+                  <ModelsProvider modelsData={models as any}>
+                  <ResponseStatsProvider responseStatsData={responseStats as any} responseStatsCountData={responseStatsCount}>
+                  <SidebarProvider>
+                    <AppSidebar />
+                    <SidebarInset className="md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-sidebar-border md:peer-data-[variant=inset]:m-2 flex flex-col h-screen md:h-[calc(100vh-1rem)]">
                       <header className="flex h-16 md:h-2 shrink-0 items-center gap-2 px-4">
                         <SidebarTrigger className="-ml-1 md:hidden" />
                       </header>
-                      <div className="flex flex-1 justify-center w-full">
-                        <div className="flex flex-1 flex-col gap-4 p-4 max-w-4xl md:px-6 ">
-                          {children}
+                      <div className="flex-1 overflow-hidden">
+                        <div className="h-full overflow-y-auto flex justify-center">
+                          <div className="flex flex-1 flex-col gap-4 p-4 max-w-4xl md:px-6">
+                            {children}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </SidebarInset>
-                </SidebarProvider>
-                </ResponseStatsProvider>
-                </ModelsProvider>
-                </SystemPromptProvider>
-              </TestResultsProvider>
-            </MilestoneVideosProvider>
-          </ValidatorsProvider>
-          </PoliciesProvider>
-        </MilestonesProvider>
-      </AccessRequestsProvider>
-    </ApiKeysProvider>
+                    </SidebarInset>
+                  </SidebarProvider>
+                  </ResponseStatsProvider>
+                  </ModelsProvider>
+                  </SystemPromptProvider>
+                </TestResultsProvider>
+              </MilestoneVideosProvider>
+            </ValidatorsProvider>
+            </PoliciesProvider>
+          </MilestonesProvider>
+        </AccessRequestsProvider>
+      </ApiKeysProvider>
+    </div>
   );
 }
