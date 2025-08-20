@@ -114,18 +114,20 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === "/dashboard"}
-              className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
-            >
-              <Link href="/dashboard" className="flex items-center gap-4 py-5">
-                <Home className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[8deg]" />
-                <span>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === "/dashboard"}
+                className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
+              >
+                <Link href="/dashboard" className="flex items-center gap-4 py-5">
+                  <Home className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[8deg]" />
+                  <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroup>
 
         <SidebarGroup>
