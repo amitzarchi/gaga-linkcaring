@@ -32,7 +32,6 @@ import {
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LogOut } from "@/components/animate-ui/icons/log-out";
 import { LogoutIcon } from "@/components/ui/logout";
 
 
