@@ -10,7 +10,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 py-4">
+    <div className="w-full flex flex-col gap-6">
       <div className="space-y-0 w-full">
         <h1 className="text-lg font-semibold w-full">Dashboard</h1>
         <p className="text-sm text-muted-foreground font-medium w-full">View your response stats.</p>

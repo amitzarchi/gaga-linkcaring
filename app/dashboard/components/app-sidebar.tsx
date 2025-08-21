@@ -20,19 +20,34 @@ import {
   Play,
   Key,
   Users,
-  LogOut,
   ListChecks,
   Shield,
   FileText,
   Sparkles,
   Milestone,
   Home,
+  TestTube,
+  LandPlot,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { LogOut } from "@/components/animate-ui/icons/log-out";
+import { LogoutIcon } from "@/components/ui/logout";
 
-// Bagel Fat One font is now provided globally via `app/layout.tsx` as CSS var `--font-gaga`
+
+const generalItems = [
+  {
+    title: "Dashboard",
+    icon: Home,
+    url: "/dashboard",
+  },
+  {
+    title: "Playground",
+    icon: LandPlot,
+    url: "/dashboard/playground",
+  },
+];
 
 const workspaceItems = [
   {
@@ -103,7 +118,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader className="p-4 pb-2">
+      <SidebarHeader className="p-4">
         <div className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
           <span className="[font-family:var(--font-gaga)] font-normal text-2xl">
             gaga{" "}
@@ -114,20 +129,31 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === "/dashboard"}
-                className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
-              >
-                <Link href="/dashboard" className="flex items-center gap-4 py-5">
-                  <Home className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[8deg]" />
-                  <span>Dashboard</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {generalItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={
+                      item.url === "/dashboard" 
+                        ? pathname === "/dashboard"
+                        : pathname === item.url || pathname.startsWith(`${item.url}/`)
+                    }
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
+                  >
+                    <Link
+                      href={item.url}
+                      className="flex items-center gap-4 py-5"
+                    >
+                      <item.icon className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[8deg]" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
@@ -210,16 +236,10 @@ export function AppSidebar() {
             variant="ghost"
             size="icon"
             onClick={handleSignOut}
-            className="size-8 group-data-[collapsible=icon]:size-8 hover:bg-gray-200"
+            className="size-8 group-data-[collapsible=icon]:size-8 hover:bg-gray-200/30"
           >
-            <LogOut className="size-4" />
+            <LogoutIcon />
           </Button>
-          {/* </TooltipTrigger>
-              <TooltipContent>
-                <p>Sign out</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider> */}
         </div>
       </SidebarFooter>
     </Sidebar>
