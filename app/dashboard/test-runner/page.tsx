@@ -17,16 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+// Drawer imports removed - mobile now shows full functionality inline
 import {
   Upload,
   Play,
@@ -54,17 +45,11 @@ import {
 import { IconWithBadge } from "@/components/icon-with-badge";
 import VideoUploader from "@/components/video-uploader";
 import { VideoHistoryModal, MilestoneHistoryModal } from "@/components/test-history";
+import { TestVideoCard } from "@/components/test-video-card";
 import { createPresignedGet } from "@/lib/actions";
 
-interface TestResult {
-  success: boolean;
-  result: boolean;
-  confidence: number;
-  error?: string;
-}
-
 interface VideoTestResult extends MilestoneVideo {
-  testResult?: TestResult;
+  testResult?: AnalyzeResult;
   isRunning?: boolean;
 }
 
@@ -98,9 +83,7 @@ export default function TestRunnerPage() {
   // Milestone history modal state
   const [milestoneHistoryModalOpen, setMilestoneHistoryModalOpen] = useState(false);
   
-  // Drawer state for mobile video details
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedVideoForDrawer, setSelectedVideoForDrawer] = useState<MilestoneVideo | null>(null);
+  // Note: Mobile drawer removed - mobile cards now show full functionality inline
 
   // Filter videos for the selected milestone
   const filteredVideos = selectedMilestone
@@ -187,12 +170,7 @@ export default function TestRunnerPage() {
     if (!selectedMilestone) {
       return {
         video,
-        testResult: {
-          success: false,
-          result: false,
-          confidence: 0,
-          error: "No milestone selected",
-        },
+        testResult: { error: "Internal server error" } as AnalyzeResult,
       };
     }
 
@@ -201,12 +179,7 @@ export default function TestRunnerPage() {
       if (!url) {
         return {
           video,
-          testResult: {
-            success: false,
-            result: false,
-            confidence: 0,
-            error: "Video URL not ready yet, please try again.",
-          },
+          testResult: { error: "Internal server error" } as AnalyzeResult,
         };
       }
 
@@ -215,38 +188,19 @@ export default function TestRunnerPage() {
         milestoneId: selectedMilestone.id,
       });
 
-      // Handle error-shaped result
-      if ("error" in data) {
-        return {
-          video,
-          testResult: {
-            success: false,
-            result: false,
-            confidence: 0,
-            error: data.error,
-          },
-        };
-      }
-
-      // Success-shaped result
-      const testResult: TestResult = {
-        success: data.result === (video.achievedMilestone === "true"),
-        result: data.result,
-        confidence: data.confidence,
-      };
-
-      // Only persist successful test runs
-      if (testResult.success) {
+      // For successful results, persist to database
+      if (!("error" in data)) {
+        const expectedResult = video.achievedMilestone === "true";
+        const actualResult = data.result;
+        const isCorrect = expectedResult === actualResult;
+        
         try {
           await addTestResult({
             milestoneId: selectedMilestone.id,
             videoId: video.id,
-            success: true,
-            result: testResult.result,
-            confidence:
-              typeof testResult.confidence === "number"
-                ? Math.round(testResult.confidence * 100)
-                : null,
+            success: isCorrect,
+            result: actualResult,
+            confidence: Math.round(data.confidence * 100),
             error: null,
           });
         } catch (dbError) {
@@ -254,16 +208,11 @@ export default function TestRunnerPage() {
         }
       }
 
-      return { video, testResult };
+      return { video, testResult: data };
     } catch (error) {
       return {
         video,
-        testResult: {
-          success: false,
-          result: false,
-          confidence: 0,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
+        testResult: { error: "Internal server error" } as AnalyzeResult,
       };
     }
   };
@@ -297,12 +246,18 @@ export default function TestRunnerPage() {
     );
 
     // Show toast notifications
-    if (testResult.error) {
+    if ("error" in testResult) {
       toast.error(`API error for ${video.videoPath.split("_")[0]}`);
-    } else if (testResult.success) {
-      toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
     } else {
-      toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
+      const expectedResult = video.achievedMilestone === "true";
+      const actualResult = testResult.result;
+      const isCorrect = expectedResult === actualResult;
+      
+      if (isCorrect) {
+        toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
+      } else {
+        toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
+      }
     }
   };
 
@@ -336,17 +291,28 @@ export default function TestRunnerPage() {
       setVideoResults(newResults);
 
       // Count results from actual data
-      const passedTests = results.filter(({ testResult }) => testResult.success).length;
+      const passedTests = results.filter(({ video, testResult }) => {
+        if ("error" in testResult) return false;
+        const expectedResult = video.achievedMilestone === "true";
+        const actualResult = testResult.result;
+        return expectedResult === actualResult;
+      }).length;
       const totalTests = filteredVideos.length;
 
       // Show individual toast notifications
       results.forEach(({ video, testResult }) => {
-        if (testResult.error) {
+        if ("error" in testResult) {
           toast.error(`API error for ${video.videoPath.split("_")[0]}`);
-        } else if (testResult.success) {
-          toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
         } else {
-          toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
+          const expectedResult = video.achievedMilestone === "true";
+          const actualResult = testResult.result;
+          const isCorrect = expectedResult === actualResult;
+          
+          if (isCorrect) {
+            toast.success(`Test passed for ${video.videoPath.split("_")[0]}`);
+          } else {
+            toast.error(`Test failed for ${video.videoPath.split("_")[0]}`);
+          }
         }
       });
 
@@ -378,41 +344,7 @@ export default function TestRunnerPage() {
     }
   };
 
-  const getResultIcon = (video: MilestoneVideo) => {
-    const result = videoResults.get(video.id);
 
-    if (result?.isRunning) {
-      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-    }
-
-    if (result?.testResult) {
-      return result.testResult.success ? (
-        <CheckCircle2 className="h-4 w-4 text-green-500" />
-      ) : (
-        <XCircle className="h-4 w-4 text-red-500" />
-      );
-    }
-
-    return <FlaskConical className="size-4 text-gray-600" />;
-  };
-
-  const getResultBadge = (video: MilestoneVideo) => {
-    const result = videoResults.get(video.id);
-
-    if (result?.isRunning) {
-      return <Badge variant="secondary">Testing...</Badge>;
-    }
-
-    if (result?.testResult) {
-      return (
-        <Badge variant={result.testResult.success ? "default" : "destructive"}>
-          {result.testResult.success ? "PASS" : "FAIL"}
-        </Badge>
-      );
-    }
-
-    return <Badge variant="outline">Not Tested</Badge>;
-  };
 
   const handleShowHistory = (video: MilestoneVideo) => {
     setSelectedVideoForHistory(video);
@@ -423,10 +355,7 @@ export default function TestRunnerPage() {
     setMilestoneHistoryModalOpen(true);
   };
 
-  const handleShowVideoDetails = (video: MilestoneVideo) => {
-    setSelectedVideoForDrawer(video);
-    setDrawerOpen(true);
-  };
+  // Mobile video details now shown inline - no drawer needed
 
   return (
     <div className="space-y-8 w-full">
@@ -622,183 +551,17 @@ export default function TestRunnerPage() {
               </div>
             ) : (
               filteredVideos.map((video) => (
-                <Card key={video.id} className="w-full">
-                  <CardContent className="p-4">
-                    {/* Desktop Layout (lg and up) */}
-                    <div className="hidden lg:block">
-                      <div className="grid grid-cols-12 gap-6">
-                        {/* Video Preview - 1/3 width (4 columns) */}
-                        <div className="col-span-4 space-y-3">
-                          <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                            <video
-                              controls
-                              className="w-full h-full object-contain"
-                              src={videoUrls.get(video.id) || undefined}
-                            >
-                              Your browser does not support video playback.
-                            </video>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-muted-foreground text-xs">
-                              {video.videoPath.split("_")[0]}
-                            </h3>
-                            <Badge
-                              variant={
-                                video.achievedMilestone === "true"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {video.achievedMilestone === "true"
-                                ? "Achieved"
-                                : "Not Achieved"}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Test Section - 1/2 of remaining width (6 columns) */}
-                        <div className="col-span-6 flex flex-col justify-between">
-                          {/* Test Result */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {getResultIcon(video)}
-                                <span className="text-sm font-medium">
-                                  Test Result
-                                </span>
-                              </div>
-                              {getResultBadge(video)}
-                            </div>
-
-                            {videoResults.get(video.id)?.testResult && (
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span>API Result:</span>
-                                  <Badge variant="outline">
-                                    {videoResults.get(video.id)?.testResult
-                                      ?.result
-                                      ? "Completed"
-                                      : "Not Completed"}
-                                  </Badge>
-                                </div>
-                                {videoResults.get(video.id)?.testResult
-                                  ?.confidence && (
-                                  <div className="flex justify-between">
-                                    <span>Confidence:</span>
-                                    <span>
-                                      {(
-                                        videoResults.get(video.id)?.testResult
-                                          ?.confidence! * 100
-                                      ).toFixed(1)}
-                                      %
-                                    </span>
-                                  </div>
-                                )}
-                                {videoResults.get(video.id)?.testResult
-                                  ?.error && (
-                                  <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                      {
-                                        videoResults.get(video.id)?.testResult
-                                          ?.error
-                                      }
-                                    </AlertDescription>
-                                  </Alert>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            onClick={() => runSingleTest(video)}
-                            disabled={videoResults.get(video.id)?.isRunning}
-                            className="w-full"
-                            variant="outline"
-                          >
-                            {videoResults.get(video.id)?.isRunning ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Play className="h-4 w-4" />
-                            )}
-                            Run Test
-                          </Button>
-                        </div>
-
-                        {/* Actions - Remaining width (2 columns) */}
-                        <div className="col-span-2 space-y-1">
-                          <Button
-                            variant="outline"
-                            onClick={() => handleShowHistory(video)}
-                            className="w-full h-2/3 gap-2 text-sm"
-                          >
-                            <History className="h-3 w-3" />
-                            History
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDeleteVideo(video.id)}
-                            disabled={deletingVideoId === video.id}
-                            className="w-full h-1/3 gap-2 text-sm"
-                          >
-                            {deletingVideoId === video.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Mobile/Tablet Layout (below lg) */}
-                    <div className="lg:hidden">
-                      <div 
-                        className="cursor-pointer"
-                        onClick={() => handleShowVideoDetails(video)}
-                      >
-                        <div className="space-y-3">
-                          {/* Video Preview */}
-                          <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                            <video
-                              className="w-full h-full object-contain pointer-events-none"
-                              src={videoUrls.get(video.id) || undefined}
-                            >
-                              Your browser does not support video playback.
-                            </video>
-                          </div>
-                          
-                          {/* Video Info Row */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex flex-col gap-1">
-                              <h3 className="font-medium text-sm">
-                                {video.videoPath.split("_")[0]}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                {getResultIcon(video)}
-                                {getResultBadge(video)}
-                              </div>
-                            </div>
-                            <Badge
-                              variant={
-                                video.achievedMilestone === "true"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {video.achievedMilestone === "true"
-                                ? "Achieved"
-                                : "Not Achieved"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <TestVideoCard
+                  key={video.id}
+                  video={video}
+                  videoUrl={videoUrls.get(video.id)}
+                  videoResult={videoResults.get(video.id)}
+                  onRunTest={runSingleTest}
+                  onShowHistory={handleShowHistory}
+                  onDelete={handleDeleteVideo}
+                  onShowDetails={() => {}} // No longer needed - mobile shows details inline
+                  isDeleting={deletingVideoId === video.id}
+                />
               ))
             )}
           </div>
@@ -831,146 +594,7 @@ export default function TestRunnerPage() {
         onOpenChange={setMilestoneHistoryModalOpen}
       />
 
-      {/* Video Details Drawer for Mobile */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader>
-            <DrawerTitle>
-              {selectedVideoForDrawer?.videoPath.split("_")[0]}
-            </DrawerTitle>
-            <DrawerDescription>
-              Video details and test results
-            </DrawerDescription>
-          </DrawerHeader>
-          
-          {selectedVideoForDrawer && (
-            <div className="px-4 pb-4 space-y-4 overflow-y-auto">
-              {/* Video Player */}
-              <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <video
-                  controls
-                  className="w-full h-full object-contain"
-                  src={selectedVideoForDrawer ? (videoUrls.get(selectedVideoForDrawer.id) || undefined) : undefined}
-                >
-                  Your browser does not support video playback.
-                </video>
-              </div>
-
-              {/* Video Info */}
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-sm">
-                  {selectedVideoForDrawer.videoPath.split("_")[0]}
-                </h3>
-                <Badge
-                  variant={
-                    selectedVideoForDrawer.achievedMilestone === "true"
-                      ? "default"
-                      : "secondary"
-                  }
-                >
-                  {selectedVideoForDrawer.achievedMilestone === "true"
-                    ? "Achieved"
-                    : "Not Achieved"}
-                </Badge>
-              </div>
-
-              {/* Test Results */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getResultIcon(selectedVideoForDrawer)}
-                    <span className="text-sm font-medium">Test Result</span>
-                  </div>
-                  {getResultBadge(selectedVideoForDrawer)}
-                </div>
-
-                {videoResults.get(selectedVideoForDrawer.id)?.testResult && (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>API Result:</span>
-                      <Badge variant="outline">
-                        {videoResults.get(selectedVideoForDrawer.id)?.testResult
-                          ?.result
-                          ? "Completed"
-                          : "Not Completed"}
-                      </Badge>
-                    </div>
-                    {videoResults.get(selectedVideoForDrawer.id)?.testResult
-                      ?.confidence && (
-                      <div className="flex justify-between">
-                        <span>Confidence:</span>
-                        <span>
-                          {(
-                            videoResults.get(selectedVideoForDrawer.id)?.testResult
-                              ?.confidence! * 100
-                          ).toFixed(1)}
-                          %
-                        </span>
-                      </div>
-                    )}
-                    {videoResults.get(selectedVideoForDrawer.id)?.testResult
-                      ?.error && (
-                      <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          {
-                            videoResults.get(selectedVideoForDrawer.id)?.testResult
-                              ?.error
-                          }
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <DrawerFooter>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                onClick={() => selectedVideoForDrawer && runSingleTest(selectedVideoForDrawer)}
-                disabled={selectedVideoForDrawer ? videoResults.get(selectedVideoForDrawer.id)?.isRunning : false}
-                variant="outline"
-                className="gap-2"
-              >
-                {selectedVideoForDrawer && videoResults.get(selectedVideoForDrawer.id)?.isRunning ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-                Run Test
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => selectedVideoForDrawer && handleShowHistory(selectedVideoForDrawer)}
-                className="gap-2"
-              >
-                <History className="h-4 w-4" />
-                History
-              </Button>
-
-              <Button
-                variant="destructive"
-                onClick={() => selectedVideoForDrawer && handleDeleteVideo(selectedVideoForDrawer.id)}
-                disabled={selectedVideoForDrawer ? deletingVideoId === selectedVideoForDrawer.id : false}
-                className="gap-2"
-              >
-                {selectedVideoForDrawer && deletingVideoId === selectedVideoForDrawer.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                Delete
-              </Button>
-            </div>
-            <DrawerClose asChild>
-              <Button variant="outline">Close</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      {/* Mobile drawer removed - all functionality now available inline in mobile cards */}
     </div>
   );
 }
