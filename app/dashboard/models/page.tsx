@@ -11,7 +11,7 @@ export default function ModelsPage() {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="space-y-0 w-full mb-2">
+      <div className="space-y-0 w-full mb-6">
         <h1 className="text-lg font-semibold w-full">Models</h1>
         <p className="text-sm text-muted-foreground font-medium w-full">
           Select which model is active for inference.
@@ -19,7 +19,6 @@ export default function ModelsPage() {
       </div>
 
       <div className="w-full space-y-2">
-        <p className="text-sm font-medium">Available Models</p>
         <RadioGroup
           className="gap-2"
           value={models.find((m) => m.isActive)?.model}
