@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+generated-validators.txt
+generateValidators.ts
+VALIDATOR_GENERATOR.md
+db/seed/*
+scripts/*
