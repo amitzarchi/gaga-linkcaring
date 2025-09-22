@@ -128,7 +128,7 @@ export default function MilestonesPage() {
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full pb-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold">Milestones</h1>
