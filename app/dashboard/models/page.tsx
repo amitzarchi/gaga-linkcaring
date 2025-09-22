@@ -47,6 +47,11 @@ export default function ModelsPage() {
                 <div className="grid grow gap-1">
                   <Label htmlFor={id} className="flex items-center gap-2">
                     <span className="font-medium">{m.name}</span>
+                    {m.inputPrice && (
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        ${(m.inputPrice).toFixed(2)}/1M tokens
+                      </span>
+                    )}
                   </Label>
                   {(m.description) && (
                     <p id={`${id}-description`} className="text-muted-foreground text-xs">

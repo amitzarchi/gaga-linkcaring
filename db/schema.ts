@@ -8,6 +8,7 @@ import {
   boolean,
   uniqueIndex,
   jsonb,
+  real,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth-schema";
 import { sql } from "drizzle-orm";
@@ -126,6 +127,7 @@ export const models = pgTable(
     isActive: boolean("is_active").notNull().default(false),
     logoUrl: text("logo_url"),
     description: text("description"),
+    inputPrice: real("input_price"),
   },
   (table) => [
     uniqueIndex("only_one_active_model")
