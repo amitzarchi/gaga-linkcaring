@@ -6,6 +6,12 @@ import { APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 30,
+    }
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: authSchema,
