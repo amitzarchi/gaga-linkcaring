@@ -10,6 +10,14 @@ function Progress({
   value,
   ...props
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  const getProgressColorClass = (rate: number) => {
+    if (rate >= 80) return "bg-green-500";
+    if (rate >= 60) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const progressColorClass = getProgressColorClass(value || 0);
+
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -21,7 +29,7 @@ function Progress({
     >
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
-        className="bg-primary h-full w-full flex-1 transition-all"
+        className={cn(" h-full w-full flex-1 transition-all", progressColorClass)}
         style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
     </ProgressPrimitive.Root>

@@ -5,6 +5,9 @@ import { validatorsData } from "@/db/seed/validators";
 export async function seedValidators() {
   try {
     console.log("Starting to seed validators...");
+
+    // Delete all validators from the database
+    await db.delete(validators);
     
     // Insert all validators into the database
     const result = await db.insert(validators).values(validatorsData).returning();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMilestones } from "@/app/context/milestones-context";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Milestone } from "@/lib/defs";
@@ -87,6 +87,7 @@ export function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSele
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  const selectedItemRef = useRef<HTMLDivElement | null>(null);
 
   const categories = useMemo(() => {
     const unique = new Set<string>();
@@ -123,6 +124,17 @@ export function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSele
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, filteredMilestones, onSelect]);
+
+  // When opening the modal/drawer, center the selected item in the scroll area
+  useEffect(() => {
+    if (!open) return;
+    const id = window.requestAnimationFrame(() => {
+      if (selectedItemRef.current) {
+        selectedItemRef.current.scrollIntoView({ block: "center", behavior: "auto" });
+      }
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [open, filteredMilestones, selectedMilestone?.id]);
 
   const triggerContent = (
     <Button 
@@ -183,6 +195,7 @@ export function MilestoneSelector({ selectedMilestone, onSelect }: MilestoneSele
             return (
               <div
                 key={milestone.id}
+                ref={isSelected ? selectedItemRef : undefined}
                 className={cn(
                   "relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors border border-transparent",
                   getCategoryBackgroundColor(milestone.category),
