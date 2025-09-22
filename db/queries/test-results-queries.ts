@@ -4,7 +4,7 @@ import { headers } from "next/dist/server/request/headers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { testResults, milestones, milestoneVideos } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { TestResultInsert } from "@/lib/defs";
 
@@ -87,11 +87,6 @@ export async function createTestResult(data: TestResultInsert): Promise<number |
     redirect("/")
   }
   
-  // Do not persist unsuccessful responses
-  if (!data.success) {
-    return null;
-  }
-
   const result = await db.insert(testResults).values(data).returning({id: testResults.id});
   return result[0].id;
 }
