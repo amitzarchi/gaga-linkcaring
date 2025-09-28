@@ -62,7 +62,7 @@ export default async function DashboardLayout({
     getPolicies(),
     getCurrentSystemPrompt(),
     getModels(),
-    getLatestResponseStats(1000),
+    getLatestResponseStats(20000),
     getResponseStatsCount()
   ]);
 
