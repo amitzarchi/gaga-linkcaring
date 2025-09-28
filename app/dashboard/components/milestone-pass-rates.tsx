@@ -40,7 +40,9 @@ export function MilestonePassRates() {
 
   const milestonePassRates = useMemo(() => {
     const rates: MilestonePassRate[] = milestones.map(milestone => {
-      const milestoneTestResults = getTestResultsByMilestone(milestone.id);
+      // Only include test results after 27.9.2025
+      const cutoffDate = new Date("2025-09-27T00:00:00.000Z");
+      const milestoneTestResults = getTestResultsByMilestone(milestone.id).filter(tr => tr.createdAt > cutoffDate);
       const totalTests = milestoneTestResults.length;
       const passedTests = milestoneTestResults.filter(tr => tr.success).length;
       const passRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
