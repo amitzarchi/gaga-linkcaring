@@ -563,7 +563,7 @@ export default function TestRunnerPage() {
         </div>
 
         {/* Run All Tests Button */}
-        <Button
+        {/* <Button
           onClick={() => setRunAllTestsModalOpen(true)}
           disabled={milestones.length === 0}
           className="size-10 rounded-full p-0 flex items-center justify-center"
@@ -571,7 +571,7 @@ export default function TestRunnerPage() {
           variant="outline"
         >
           <ListVideo className="size-5" />
-        </Button>
+        </Button> */}
       </div>
 
       {/* Milestone Selector */}
