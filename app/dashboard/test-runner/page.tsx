@@ -42,20 +42,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Drawer imports removed - mobile now shows full functionality inline
 import {
   Upload,
-  Play,
   Video,
   Loader2,
   X,
   TestTube,
-  ListVideo,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
   Trash2,
   PlusIcon,
   FlaskConical,
   History,
-  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -66,15 +60,6 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { IconWithBadge } from "@/components/icon-with-badge";
 import VideoUploader from "@/components/video-uploader";
 import {
@@ -123,12 +108,6 @@ export default function TestRunnerPage() {
   const [milestoneHistoryModalOpen, setMilestoneHistoryModalOpen] =
     useState(false);
 
-  // Run all tests modal state
-  const [runAllTestsModalOpen, setRunAllTestsModalOpen] = useState(false);
-  const [bulkTestResults, setBulkTestResults] = useState<
-    Map<number, { passed: number; total: number; isRunning: boolean }>
-  >(new Map());
-  const [isRunningAllTests, setIsRunningAllTests] = useState(false);
 
   // Filter videos for the selected milestone
   const filteredVideos = selectedMilestone
@@ -393,161 +372,6 @@ export default function TestRunnerPage() {
     setMilestoneHistoryModalOpen(true);
   };
 
-  const runAllTests = async () => {
-    if (milestones.length === 0) return;
-
-    setIsRunningAllTests(true);
-
-    // Initialize results for all milestones
-    const initialResults = new Map();
-    milestones.forEach((milestone) => {
-      const videosForMilestone = milestoneVideos.filter(
-        (v) => v.milestoneId === milestone.id
-      );
-      initialResults.set(milestone.id, {
-        passed: 0,
-        total: videosForMilestone.length,
-        isRunning: videosForMilestone.length > 0,
-      });
-    });
-    setBulkTestResults(initialResults);
-
-    try {
-      // Get all videos across all milestones
-      const allMilestonePromises = milestones.map(async (milestone) => {
-        const videosForMilestone = milestoneVideos.filter(
-          (v) => v.milestoneId === milestone.id
-        );
-
-        if (videosForMilestone.length === 0) {
-          return { milestoneId: milestone.id, results: [] };
-        }
-
-        // Get presigned URLs for this milestone's videos
-        const videoUrlsForMilestone = new Map();
-        try {
-          const entries = await Promise.all(
-            videosForMilestone.map(async (v) => {
-              const { url } = await createPresignedGet({
-                key: v.videoPath,
-                expiresIn: 3600,
-              });
-              return [v.id, url] as const;
-            })
-          );
-          entries.forEach(([id, url]) => videoUrlsForMilestone.set(id, url));
-        } catch (e) {
-          console.error(
-            "Failed to fetch presigned URLs for milestone",
-            milestone.id,
-            e
-          );
-          return { milestoneId: milestone.id, results: [] };
-        }
-
-        // Run tests for all videos in this milestone in parallel
-        const testPromises = videosForMilestone.map(async (video) => {
-          try {
-            const url = videoUrlsForMilestone.get(video.id);
-            if (!url) {
-              return {
-                video,
-                testResult: { error: "Internal server error" } as AnalyzeResult,
-              };
-            }
-
-            const data: AnalyzeResult = await analyzeMilestoneVideoClient({
-              videoUrl: url,
-              milestoneId: video.milestoneId,
-            });
-
-            // For successful results, persist to database
-            if (!("error" in data)) {
-              const expectedResult = video.achievedMilestone === "true";
-              const actualResult = data.result;
-              const isCorrect = expectedResult === actualResult;
-
-              try {
-                await addTestResult({
-                  milestoneId: video.milestoneId,
-                  videoId: video.id,
-                  success: isCorrect,
-                  result: actualResult,
-                  confidence: Math.round(data.confidence * 100),
-                  error: null,
-                });
-              } catch (dbError) {
-                console.error(
-                  "Failed to save test result to database:",
-                  dbError
-                );
-              }
-            }
-
-            return { video, testResult: data };
-          } catch (error) {
-            return {
-              video,
-              testResult: { error: "Internal server error" } as AnalyzeResult,
-            };
-          }
-        });
-
-        const results = await Promise.all(testPromises);
-
-        // Update results for this milestone
-        const passedTests = results.filter(({ video, testResult }) => {
-          if ("error" in testResult) return false;
-          const expectedResult = video.achievedMilestone === "true";
-          const actualResult = testResult.result;
-          return expectedResult === actualResult;
-        }).length;
-
-        setBulkTestResults(
-          (prev) =>
-            new Map(
-              prev.set(milestone.id, {
-                passed: passedTests,
-                total: videosForMilestone.length,
-                isRunning: false,
-              })
-            )
-        );
-
-        return { milestoneId: milestone.id, results };
-      });
-
-      // Wait for all milestones to complete
-      const allResults = await Promise.all(allMilestonePromises);
-
-      // Calculate total stats
-      const totalPassed = allResults.reduce((sum, { results }) => {
-        return (
-          sum +
-          results.filter(({ video, testResult }) => {
-            if ("error" in testResult) return false;
-            const expectedResult = video.achievedMilestone === "true";
-            const actualResult = testResult.result;
-            return expectedResult === actualResult;
-          }).length
-        );
-      }, 0);
-
-      const totalTests = allResults.reduce(
-        (sum, { results }) => sum + results.length,
-        0
-      );
-
-      toast.success(
-        `All tests completed: ${totalPassed}/${totalTests} tests passed across all milestones`
-      );
-    } catch (error) {
-      console.error("Error running all tests:", error);
-      toast.error("Error running all tests");
-    } finally {
-      setIsRunningAllTests(false);
-    }
-  };
 
   // Mobile video details now shown inline - no drawer needed
 
@@ -561,17 +385,6 @@ export default function TestRunnerPage() {
             Manage videos and run tests.
           </p>
         </div>
-
-        {/* Run All Tests Button */}
-        <Button
-          onClick={() => setRunAllTestsModalOpen(true)}
-          disabled={milestones.length === 0}
-          className="size-10 rounded-full p-0 flex items-center justify-center"
-          size="icon"
-          variant="outline"
-        >
-          <ListVideo className="size-5" />
-        </Button>
       </div>
 
       {/* Milestone Selector */}
@@ -640,7 +453,7 @@ export default function TestRunnerPage() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Run All Tests</p>
+                  <p>Run All Tests for Current Milestone</p>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -806,108 +619,6 @@ export default function TestRunnerPage() {
         onOpenChange={setMilestoneHistoryModalOpen}
       />
 
-      {/* Run All Tests Modal */}
-      <Dialog
-        open={runAllTestsModalOpen}
-        onOpenChange={setRunAllTestsModalOpen}
-      >
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PlayCircle className="h-5 w-5" />
-              Run All Tests
-            </DialogTitle>
-            <DialogDescription>
-              {(() => {
-                const totalVideos = milestoneVideos.length;
-                const totalMilestones = milestones.length;
-
-                if (isRunningAllTests) {
-                  return `Running tests across ${totalMilestones} milestones (${totalVideos} videos total). Results will appear as they complete.`;
-                } else {
-                  return `Run tests across ${totalMilestones} milestones (${totalVideos} videos total). Click the play button to start testing all videos.`;
-                }
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto space-y-4">
-            {milestones.map((milestone) => {
-              const milestoneVideoCount = milestoneVideos.filter(
-                (v) => v.milestoneId === milestone.id
-              ).length;
-              const result = bulkTestResults.get(milestone.id);
-
-              return (
-                <div
-                  key={milestone.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-medium">{milestone.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {milestoneVideoCount} video
-                      {milestoneVideoCount !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {result?.isRunning ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm text-muted-foreground">
-                          Running...
-                        </span>
-                      </div>
-                    ) : result ? (
-                      <div className="flex items-center gap-2">
-                        {result.passed === result.total ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : result.passed > 0 ? (
-                          <AlertCircle className="h-4 w-4 text-yellow-600" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-600" />
-                        )}
-                        <span className="font-medium">
-                          {result.passed}/{result.total}
-                        </span>
-                      </div>
-                    ) : milestoneVideoCount === 0 ? (
-                      <span className="text-sm text-muted-foreground">
-                        No videos
-                      </span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        Pending...
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <DialogFooter className="flex gap-2">
-            {!isRunningAllTests && (
-              <Button
-                onClick={runAllTests}
-                disabled={milestones.length === 0}
-                className="gap-2"
-              >
-                <Play className="h-4 w-4" />
-                Run All Tests
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={() => setRunAllTestsModalOpen(false)}
-              disabled={isRunningAllTests}
-            >
-              {isRunningAllTests ? "Running..." : "Close"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
