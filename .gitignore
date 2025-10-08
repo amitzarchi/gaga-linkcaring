@@ -45,3 +45,4 @@ generateValidators.ts
 VALIDATOR_GENERATOR.md
 db/seed/*
 scripts/*
+db/queries/response-stats-queries.ts
