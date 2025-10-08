@@ -94,6 +94,9 @@ const serviceItems = [
     icon: Users,
     url: "/dashboard/admins",
   },
+];
+
+const documentationItems = [
   {
     title: "API Reference",
     icon: BookOpen,
@@ -217,6 +220,31 @@ export function AppSidebar() {
                         {pendingRequestsCount}
                       </SidebarMenuBadge>
                     )}
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>DOCUMENTATION</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {documentationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
+                    className="hover:bg-gray-200/30 hover:ring-1 hover:ring-gray-300/50 data-[active=true]:bg-gray-200/50 data-[active=true]:ring-1 data-[active=true]:ring-gray-300/60"
+                  >
+                    <Link
+                      href={item.url}
+                      className="flex items-center gap-4 py-5"
+                    >
+                      <item.icon className="!size-5 transition-transform duration-200 ease-out group-hover/menu-item:rotate-[8deg]" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
