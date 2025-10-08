@@ -75,6 +75,7 @@ export type ModelInsert = typeof models.$inferInsert;
 export type ResponseStat = typeof responseStats.$inferSelect;
 
 export type AnalyzeSuccessBody = {
+  id: string;
   milestoneId: number;
   result: boolean;
   confidence: number; // 0–1

@@ -28,6 +28,7 @@ import {
   Home,
   TestTube,
   LandPlot,
+  BookOpen,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -91,6 +92,11 @@ const serviceItems = [
     title: "Admins & Requests",
     icon: Users,
     url: "/dashboard/admins",
+  },
+  {
+    title: "API Reference",
+    icon: BookOpen,
+    url: "/dashboard/api-reference",
   },
 ];
 
