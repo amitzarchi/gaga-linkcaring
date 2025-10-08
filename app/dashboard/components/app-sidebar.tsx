@@ -29,6 +29,7 @@ import {
   TestTube,
   LandPlot,
   BookOpen,
+  Cloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -97,6 +98,11 @@ const serviceItems = [
     title: "API Reference",
     icon: BookOpen,
     url: "/dashboard/api-reference",
+  },
+  {
+    title: "Self-Hosting Guide",
+    icon: Cloud,
+    url: "/dashboard/self-hosting",
   },
 ];
 
