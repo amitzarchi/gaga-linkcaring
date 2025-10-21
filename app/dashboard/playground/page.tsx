@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { MilestoneSelector } from "@/components/milestone-selector";
 import { useMilestones } from "@/app/context/milestones-context";
 import { AnalyzeResult } from "@/lib/defs";
@@ -22,9 +24,10 @@ import {
   FileUpIcon,
   FileIcon,
   VideoIcon,
+  Link as LinkIcon,
 } from "lucide-react";
 
-// Client-side function to call the API route for parallel execution
+// Client-side function to call the API route for file uploads
 const analyzeMilestoneVideoFileClient = async (params: {
   videoFile: File;
   milestoneId: number;
@@ -50,6 +53,34 @@ const analyzeMilestoneVideoFileClient = async (params: {
   }
 };
 
+// Client-side function to call the API route for YouTube links
+const analyzeMilestoneVideoUrlClient = async (params: {
+  videoUrl: string;
+  milestoneId: number;
+}): Promise<AnalyzeResult> => {
+  try {
+    const response = await fetch("/api/analyze-milestone", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        videoUrl: params.videoUrl,
+        milestoneId: params.milestoneId,
+      }),
+    });
+
+    if (!response.ok) {
+      return { error: "Internal server error" };
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error calling analyze-milestone API:", error);
+    return { error: "Internal server error" };
+  }
+};
+
 interface VideoAnalysis {
   fileId: string;
   isAnalyzing: boolean;
@@ -59,6 +90,8 @@ interface VideoAnalysis {
 export default function PlaygroundPage() {
   const { selectedMilestone, setSelectedMilestone } = useMilestones();
   const [videoAnalyses, setVideoAnalyses] = useState<Map<string, VideoAnalysis>>(new Map());
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeAnalysis, setYoutubeAnalysis] = useState<VideoAnalysis | null>(null);
   
   const maxSize = 100 * 1024 * 1024; // 100MB
   const maxFiles = 10;
@@ -161,6 +194,37 @@ export default function PlaygroundPage() {
     }
   };
 
+  const handleAnalyzeYoutubeUrl = async () => {
+    if (!selectedMilestone || !youtubeUrl.trim()) return;
+
+    // Set loading state
+    setYoutubeAnalysis({
+      fileId: "youtube",
+      isAnalyzing: true,
+      result: null,
+    });
+
+    try {
+      const result = await analyzeMilestoneVideoUrlClient({
+        videoUrl: youtubeUrl,
+        milestoneId: selectedMilestone.id,
+      });
+
+      setYoutubeAnalysis({
+        fileId: "youtube",
+        isAnalyzing: false,
+        result,
+      });
+    } catch (error) {
+      console.error("Error analyzing YouTube URL:", error);
+      setYoutubeAnalysis({
+        fileId: "youtube",
+        isAnalyzing: false,
+        result: { error: "Internal server error" },
+      });
+    }
+  };
+
   const getResultIcon = (analysis?: VideoAnalysis) => {
     if (analysis?.isAnalyzing) {
       return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
@@ -225,7 +289,15 @@ export default function PlaygroundPage() {
 
       {selectedMilestone && (
         <div className="space-y-6 w-full">
-          {/* Video Upload Section */}
+          {/* Video Input Section with Tabs */}
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload">Upload File</TabsTrigger>
+              <TabsTrigger value="youtube">YouTube Link</TabsTrigger>
+            </TabsList>
+
+            {/* File Upload Tab */}
+            <TabsContent value="upload" className="space-y-2">
           <div className="flex flex-col gap-2">
             {/* Drop area */}
             <div
@@ -434,6 +506,132 @@ export default function PlaygroundPage() {
               </div>
             )}
           </div>
+            </TabsContent>
+
+            {/* YouTube Link Tab */}
+            <TabsContent value="youtube" className="space-y-4">
+              <div className="flex flex-col gap-4">
+                {/* YouTube URL Input */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="text"
+                      placeholder="Enter YouTube URL (e.g., https://www.youtube.com/watch?v=...)"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleAnalyzeYoutubeUrl}
+                    disabled={youtubeAnalysis?.isAnalyzing || !youtubeUrl.trim()}
+                    className="gap-2"
+                  >
+                    {youtubeAnalysis?.isAnalyzing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    Analyze
+                  </Button>
+                </div>
+
+                {/* YouTube Analysis Result */}
+                {youtubeAnalysis && (
+                  <Card className="w-full">
+                    <CardContent className="p-4">
+                      {/* Header */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-3 overflow-hidden flex-1">
+                          <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border">
+                            <LinkIcon className="size-4 opacity-60" />
+                          </div>
+                          <div className="flex min-w-0 flex-col gap-0.5">
+                            <p className="truncate text-[13px] font-medium">
+                              YouTube Video
+                            </p>
+                            <p className="text-muted-foreground text-xs truncate">
+                              {youtubeUrl}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {getResultBadge(youtubeAnalysis)}
+                        </div>
+                      </div>
+
+                      {/* Analysis Results */}
+                      {youtubeAnalysis.result && (
+                        <div className="border-t pt-3 mt-3">
+                          {"error" in youtubeAnalysis.result ? (
+                            <Alert variant="destructive">
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertDescription>
+                                {youtubeAnalysis.result.error}
+                              </AlertDescription>
+                            </Alert>
+                          ) : (
+                            <div className="space-y-3">
+                              {/* Main Result */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-muted-foreground">Result</div>
+                                  <div className="flex items-center gap-2">
+                                    {getResultIcon(youtubeAnalysis)}
+                                    <span className="text-sm font-medium">
+                                      {youtubeAnalysis.result.result ? "Achieved" : "Not Achieved"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-xs font-medium text-muted-foreground">Confidence</div>
+                                  <div className="text-lg font-semibold">
+                                    {(youtubeAnalysis.result.confidence * 100).toFixed(1)}%
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Validators Summary */}
+                              {youtubeAnalysis.result.validators.length > 0 && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <ListChecks className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-xs font-medium">
+                                      Validators ({youtubeAnalysis.result.validators.filter(v => v.result).length}/{youtubeAnalysis.result.validators.length} passed)
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    {youtubeAnalysis.result.validators.map((validator, index) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-start gap-2 p-2 bg-muted rounded text-xs"
+                                      >
+                                        <div className="flex-shrink-0 mt-0.5">
+                                          {validator.result ? (
+                                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                                          ) : (
+                                            <XCircle className="h-3 w-3 text-red-600" />
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          {validator.description}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       )}
 
