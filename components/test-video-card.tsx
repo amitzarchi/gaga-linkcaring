@@ -196,9 +196,16 @@ export function TestVideoCard({
                                     ) : (
                                       <XCircle className="h-3 w-3 text-red-600 flex-shrink-0 mt-0.5" />
                                     )}
-                                    <span className="break-words text-wrap leading-tight" title={validator.description}>
-                                      {validator.description}
-                                    </span>
+                                    <div className="flex-1">
+                                      <span className="break-words text-wrap leading-tight" title={validator.description}>
+                                        {validator.description}
+                                      </span>
+                                      {!validator.result && validator.reasonForFailure && (
+                                        <div className="text-red-600 mt-0.5 bg-red-500/10 rounded-sm p-1 text-[10px] leading-tight pl-2">
+                                          - {validator.reasonForFailure}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -372,9 +379,16 @@ export function TestVideoCard({
                                     ) : (
                                       <XCircle className="h-3 w-3 text-red-600 flex-shrink-0 mt-0.5" />
                                     )}
-                                    <span className="break-words text-wrap leading-tight" title={validator.description}>
-                                      {validator.description}
-                                    </span>
+                                    <div className="flex-1">
+                                      <span className="break-words text-wrap leading-tight" title={validator.description}>
+                                        {validator.description}
+                                      </span>
+                                      {!validator.result && validator.reasonForFailure && (
+                                        <div className="text-red-600 mt-0.5 text-[10px] leading-tight">
+                                          {validator.reasonForFailure}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                                     

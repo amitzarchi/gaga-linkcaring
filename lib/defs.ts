@@ -79,7 +79,7 @@ export type AnalyzeSuccessBody = {
   milestoneId: number;
   result: boolean;
   confidence: number; // 0–1
-  validators: { description: string; result: boolean }[];
+  validators: { description: string; result: boolean; reasonForFailure?: string; }[];
   policy: {
     minValidatorsPassed: number; // percent (0–100)
     minConfidence: number; // percent (0–100)

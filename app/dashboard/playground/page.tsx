@@ -487,8 +487,15 @@ export default function PlaygroundPage() {
                                               <XCircle className="h-3 w-3 text-red-600" />
                                             )}
                                           </div>
+                                          <div className="flex flex-col gap-1">
                                           <div className="flex-1 min-w-0">
                                             {validator.description}
+                                          </div>
+                                          {!validator.result && validator.reasonForFailure && (
+                                            <div className="text-red-600 mt-0.5 bg-red-500/10 rounded-sm p-1 text-[10px] leading-tight pl-2">
+                                              - {validator.reasonForFailure}
+                                            </div>
+                                          )}
                                           </div>
                                         </div>
                                       ))}
