@@ -12,7 +12,7 @@ export async function getResponseStatsCount(): Promise<number> {
   return row?.count ?? 0;
 }
 
-export async function getLatestResponseStats(limit = 10000) {
+export async function getLatestResponseStats(limit = 15000) {
   const rows = await db
     .select()
     .from(responseStats)
@@ -20,5 +20,4 @@ export async function getLatestResponseStats(limit = 10000) {
     .limit(limit);
   return rows;
 }
-
 
